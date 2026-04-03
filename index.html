@@ -141,11 +141,11 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
 
 .card-pos-label { position:absolute; top:-26px; left:50%; transform:translateX(-50%); font-family:'Cinzel',serif; font-size:8px; letter-spacing:.2em; color:rgba(201,168,76,.75); white-space:nowrap; opacity:0; transition:opacity .4s; pointer-events:none; }
 
-@keyframes breathe { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+@keyframes breathe { 0%,100%{opacity:.85} 50%{opacity:1} }
 .idle-breathe { animation:breathe 3s ease-in-out infinite; }
 
 .focus-ring { position:absolute; inset:-4px; border:1px solid var(--gold); border-radius:10px; opacity:0; pointer-events:none; animation:focus-pulse 2s ease-in-out infinite; }
-@keyframes focus-pulse { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.03)} }
+@keyframes focus-pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
 .tarot-card.is-focused .focus-ring { opacity:1; }
 .tarot-card.is-focused .card-pos-label { opacity:1; }
 
@@ -489,14 +489,12 @@ function updateFocus(idx,animate=true){
   const els=getCardEls();
   els.forEach((el,i)=>{
     el.classList.remove('is-focused');
-    // 取消縮放差異，只用亮度區分，避免邊緣牌跑出畫面
     const dist = Math.abs(i - idx);
-    const bri = dist===0 ? 1 : dist===1 ? 0.75 : 0.5;
-    const yOff = i===idx ? -6 : 0;
-    el.style.transition=animate?'transform .35s cubic-bezier(.4,0,.2,1),filter .3s':'none';
+    const bri = dist===0 ? 1 : dist===1 ? 0.78 : 0.5;
+    el.style.transition=animate?'filter .3s':'none';
     const slot=selectedCards.findIndex(sc=>sc&&sc.deckIndex===i);
     const rotY=slot>=0?180:0;
-    el.style.transform=`translateY(${yOff}px) rotateY(${rotY}deg)`;
+    el.style.transform=`rotateY(${rotY}deg)`;
     el.style.filter=`brightness(${bri})`;
     el.querySelector('.card-pos-label').textContent=slot>=0?POSITIONS[slot]:'';
   });
@@ -610,45 +608,44 @@ async function callGemini(){
   const content=document.getElementById('reading-content');
   const suitLabel={major:'大阿爾克那',wands:'權杖／火元素',cups:'聖杯／水元素',swords:'寶劍／風元素',pents:'星幣／土元素'};
   const cardDesc=selectedCards.map((sc,i)=>`${POSITIONS[i]}（${POS_HINT[i]}）：${sc.nameZh}（${sc.name}）［${suitLabel[sc.suit]}］— 關鍵字：${sc.keywords.join('、')}`).join('\n');
-  const prompt=`你是一位具備 20 年經驗的資深塔羅諮詢師，擅長結合傳統神秘學符號、榮格原型心理學以及教練式引導（Coaching）。你的風格理性與感性並重，不僅解釋牌面意義，更能洞察求問者潛意識中的盲點，並給予務實的行動建議。
+  const prompt=`你是一位具備 20 年經驗的資深塔羅諮詢師。你的解讀風格具體、深入、有溫度，絕對不說泛泛的套話。你始終緊扣求問者的問題來解讀每一張牌，讓對方感覺「你真的在說我的事」。
 
-求問者的問題：${question}
+求問者的問題：「${question}」
 
 三張牌陣：
 ${cardDesc}
 
-請用繁體中文進行完整深度解析。你必須嚴格使用以下四個標記來分隔段落，標記單獨佔一行，標記前後不加任何其他符號：
+請用繁體中文進行完整解讀。你必須嚴格使用以下標記分隔段落，每個標記單獨佔一行，前後不加任何符號：
 
-##LAYER1##
-針對每一張牌，先寫出「編號. 位置：牌名（英文名）」，下一行寫引號包起來的核心關鍵字，然後用 3-4 句話具體解讀這張牌在這個位置對求問者的問題代表什麼。語氣像資深諮詢師面對面說話，有溫度但直接。三張牌之間空一行。
+##PAST##
+解讀「過去」這張牌。這個位置代表導致目前處境的根源、背景、或過去做過的決定。請針對求問者的問題，詳細說明：
+- 過去發生了什麼具體的事情或心境？
+- 為什麼會走到今天這個局面？這張牌揭示了什麼根本原因？
+- 這段過去對求問者造成了什麼影響，留下了什麼？
+寫 5-7 句，語氣直接有溫度，像面對面在說話。
 
-格式範例：
-1. 過去：世界（The World）
-「一個階段的圓滿與結束」
-這張牌出現在過去位，代表你不久前才完成了一個重要的里程碑……
+##NOW##
+解讀「現在」這張牌。這個位置代表求問者當下正在經歷的核心處境與挑戰。請針對求問者的問題，詳細說明：
+- 求問者現在實際面對的是什麼情況？
+- 這張牌指出了什麼核心課題或關鍵轉捩點？
+- 現在最需要正視的事情是什麼？有什麼機會或危機正在發生？
+寫 5-7 句，讓求問者感覺「說中了我現在的狀態」。
 
-2. 現在：魔術師（The Magician）
-「萬事具備，只欠行動」
-魔術師代表創造力與資源整合……
+##FUTURE##
+解讀「未來」這張牌。這個位置代表如果按照牌的能量走，事情會往哪個方向發展。請針對求問者的問題，詳細說明：
+- 未來最可能出現的具體走向是什麼？
+- 會有什麼轉變或結果？時間感上是快還是慢？
+- 要讓這個未來成真，或要避免壞的結果，求問者需要做什麼或注意什麼？
+寫 5-7 句，給求問者清楚的方向感，不要模糊帶過。
 
-3. 未來：節制（Temperance）
-「磨合後的平衡與昇華」
-這是一張關於煉金術的牌……
-
-##LAYER2##
-分析三張牌之間的能量流動。能量是卡住了還是順暢的？出現的是大阿爾克那還是小牌，比例說明了什麼？三張牌合在一起在說一個什麼樣的故事？有無矛盾或張力？寫 4-5 句。
-
-##LAYER3##
-根據這組牌，直接指出求問者目前可能「看漏了什麼」或「過度執著於什麼」。語氣誠實直接，像朋友說真話，不說教。寫 3-4 句。
-
-##LAYER4##
-提供 3 個現在就可以開始執行的具體行動（編號列出，每項說清楚做什麼、怎麼做），以及一個需要調整的核心心態（單獨一段說明）。`;
+##ACTION##
+根據以上三張牌的整體訊息，針對求問者的問題「${question}」，給出 3 個具體可執行的行動建議。每個建議用一句話說清楚做什麼、怎麼做、為什麼這樣做。編號列出。最後加一句心態提醒。`;
 
   try{
     const res=await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
       {method:'POST',headers:{'Content-Type':'application/json'},
-       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:3000}})});
+       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:4000}})});
     if(!res.ok)throw new Error(res.status);
     const data=await res.json();
     const text=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
@@ -662,10 +659,9 @@ ${cardDesc}
 }
 
 function renderReading(text){
-  const titles=['三張牌的個別解讀','牌陣間的動態關聯','潛意識盲點','具體行動建議'];
-  const markers=['##LAYER1##','##LAYER2##','##LAYER3##','##LAYER4##'];
+  const markers  = ['##PAST##','##NOW##','##FUTURE##','##ACTION##'];
+  const titles   = ['過去','現在','未來','行動建議'];
 
-  // Split by markers
   const buckets = markers.map((marker, i) => {
     const start = text.indexOf(marker);
     if(start === -1) return '';
@@ -677,19 +673,22 @@ function renderReading(text){
     return content.trim();
   });
 
-  // If markers not found at all, fall back to paragraph split
-  const hasMarkers = buckets.some(b => b.length > 0);
-  if(!hasMarkers){
+  // Fallback: paragraph split if no markers found
+  if(!buckets.some(b => b.length > 0)){
     const paras = text.trim().split(/\n\n+/);
-    buckets[0] = paras.slice(0,3).join('\n\n');
-    buckets[1] = paras[3]||'';
-    buckets[2] = paras[4]||'';
-    buckets[3] = paras.slice(5).join('\n\n');
+    const third = Math.ceil(paras.length / 4);
+    buckets[0] = paras.slice(0, third).join('\n\n');
+    buckets[1] = paras.slice(third, third*2).join('\n\n');
+    buckets[2] = paras.slice(third*2, third*3).join('\n\n');
+    buckets[3] = paras.slice(third*3).join('\n\n');
   }
+
+  // Card emojis for section headers
+  const cardEmojis = selectedCards.map(sc => sc?.emoji || '');
 
   document.getElementById('reading-content').innerHTML = buckets.map((s,i) => `
     <div class="reading-section">
-      <div class="reading-section-title">${titles[i]}</div>
+      <div class="reading-section-title">${cardEmojis[i] ? cardEmojis[i] + '　' : ''}${titles[i]}${selectedCards[i] ? '　·　' + selectedCards[i].nameZh : ''}</div>
       <div class="reading-practical" id="section-${i}"></div>
     </div>`).join('');
 
@@ -697,7 +696,7 @@ function renderReading(text){
     if(i >= buckets.length) return;
     const el = document.getElementById(`section-${i}`);
     if(!el || !buckets[i]) return writeSection(i+1);
-    typewrite(el, buckets[i], 16, () => setTimeout(() => writeSection(i+1), 300));
+    typewrite(el, buckets[i], 14, () => setTimeout(() => writeSection(i+1), 300));
   }
   writeSection(0);
 }
@@ -730,4 +729,3 @@ function showToast(msg){const el=document.getElementById('toast');el.textContent
 </script>
 </body>
 </html>
-
