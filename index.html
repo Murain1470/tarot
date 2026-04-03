@@ -541,30 +541,28 @@ function showApiKeyPrompt(){
 async function callGemini(){
   const content=document.getElementById('reading-content');
   const cardDesc=selectedCards.map((sc,i)=>`${POSITIONS[i]}（${POS_HINT[i]}）：${sc.nameZh}（${sc.name}）— 關鍵字：${sc.keywords.join('、')}`).join('\n');
-  const past=selectedCards[0]?.nameZh, present=selectedCards[1]?.nameZh, future=selectedCards[2]?.nameZh;
-  const prompt=`你是一位經驗豐富的塔羅解讀師，解讀具體、深入、有溫度，避免模糊的泛泛之詞。
+  const prompt=`你是一位具備 20 年經驗的資深塔羅諮詢師，擅長結合傳統神秘學符號、榮格原型心理學以及教練式引導（Coaching）。你的風格理性與感性並重，不僅解釋牌面意義，更能洞察求問者潛意識中的盲點，並給予務實的行動建議。
 
-提問者的問題：${question}
+求問者的問題：${question}
 
-三張牌：
+三張牌陣（過去・現在・未來）：
 ${cardDesc}
 
-請用繁體中文，輸出以下兩個段落，段落之間空一行，不要加任何標題文字：
+請用繁體中文進行深度解析，依照以下四個層次輸出，每個層次之間空一行。不要加標題符號或 markdown，直接輸出文字內容：
 
-第一段：用2-3句充滿意象的語言，描述這三張牌組合的整體氛圍與命運走向，讓人讀完有「被看見」的感受。
+第一層【牌面意象與核心能量】：解釋每一張牌在它所在位置（過去／現在／未來）的核心意義，以及針對求問者這個問題，它代表的具體心境或外在環境。每張牌各2-3句。
 
-第二段：分三個部分具體解讀，每部分2-3句：
-過去（${past}）：這張牌說明了什麼根源或過去的決定，如何影響到現在的處境？
-現在（${present}）：提問者現在面臨的核心挑戰或機會是什麼？這張牌要他們正視哪件事？
-未來（${future}）：如果按照牌的指引，未來走向如何？有什麼具體的事情需要去做或避免？
+第二層【牌陣間的動態關聯】：不要只分開看牌。分析三張牌之間的能量流動——能量是卡住了還是順暢的？這組牌的整體敘事是什麼？它們合在一起說了一個什麼樣的故事？
 
-語氣誠懇貼近生活，像朋友在認真回答，不說教。`;
+第三層【潛意識盲點】：根據這組牌，直接指出求問者目前可能「看漏了什麼」或「過度執著於什麼」。語氣直接但不說教，像一位誠實的朋友在說真話。
+
+第四層【具體行動建議】：提供 2-3 個現在就可以開始做的實體行動，以及一個需要調整的心態建議。行動要具體可執行，不要空泛。`;
 
   try{
     const res=await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
       {method:'POST',headers:{'Content-Type':'application/json'},
-       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:1000}})});
+       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:1500}})});
     if(!res.ok)throw new Error(res.status);
     const data=await res.json();
     const text=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
@@ -579,19 +577,27 @@ ${cardDesc}
 
 function renderReading(text){
   const parts=text.trim().split(/\n\n+/);
-  const poetic=parts[0]||'', practical=parts.slice(1).join('\n\n')||'';
-  document.getElementById('reading-content').innerHTML=`
-    <div class="reading-section">
-      <div class="reading-section-title">詩意感悟</div>
-      <div class="reading-poetic" id="poetic-text"></div>
-    </div>
-    <div class="reading-section">
-      <div class="reading-section-title">實際指引</div>
-      <div class="reading-practical" id="practical-text"></div>
-    </div>`;
-  typewrite(document.getElementById('poetic-text'),poetic,30,()=>{
-    setTimeout(()=>typewrite(document.getElementById('practical-text'),practical,20),400);
+  const titles=['牌面意象與核心能量','牌陣間的動態關聯','潛意識盲點','具體行動建議'];
+  // Assign parts to sections; if AI gives more/fewer paragraphs, group remainder into last section
+  const sections=titles.map((_,i)=>{
+    if(i<3) return parts[i]||'';
+    return parts.slice(3).join('\n\n')||'';
   });
+
+  document.getElementById('reading-content').innerHTML=sections.map((s,i)=>`
+    <div class="reading-section">
+      <div class="reading-section-title">${titles[i]}</div>
+      <div class="reading-practical" id="section-${i}"></div>
+    </div>`).join('');
+
+  // Typewrite each section in sequence
+  function writeSection(i){
+    if(i>=sections.length)return;
+    const el=document.getElementById(`section-${i}`);
+    if(!el)return;
+    typewrite(el, sections[i], 18, ()=>setTimeout(()=>writeSection(i+1), 300));
+  }
+  writeSection(0);
 }
 
 function typewrite(el,text,speed,onDone){
