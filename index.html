@@ -618,43 +618,22 @@ ${cardDesc}
 請用繁體中文進行完整解讀。你必須嚴格使用以下標記分隔段落，每個標記單獨佔一行，前後不加任何符號：
 
 ##PAST##
-【過去位】：定義「根源」與「因果」
-
-寫什麼：
-造成現狀的潛在遠因是什麼？這張牌代表你已經具備的資源或舊有模式。分析這張牌的能量是「圓滿留下的餘溫」還是「未解決的遺憾」。
-
-關鍵句必須包含：「這張牌顯示你從哪裡來，以及你當初是如何處理問題的...」
-
-要求：至少 150 字，用流暢段落書寫，緊扣求問者的問題「${question}」，具體說明這張牌在過去位的意義。
+【過去位】根源與因果：造成現狀的潛在原因是什麼？這張牌的能量是「圓滿的餘溫」還是「未解的遺憾」？緊扣問題具體解讀，嚴格限制在 80 字以內。
 
 ##NOW##
-【現在位】：定義「矛盾」與「槓桿」
-
-寫什麼：
-你目前最核心的心理衝突或外在阻礙。你手邊立刻可用的工具或機會（槓桿點）。如果你現在「不動」，能量會如何卡住？
-
-關鍵句必須包含：「你目前的當務之急是...，這張牌暗示你手中握有的籌碼是...」
-
-要求：至少 150 字，用流暢段落書寫，緊扣求問者的問題「${question}」，具體說明這張牌在現在位的意義。
+【現在位】矛盾與槓桿：目前最核心的衝突或阻礙是什麼？手邊可用的籌碼是什麼？若不動，能量如何卡住？緊扣問題具體解讀，嚴格限制在 80 字以內。
 
 ##FUTURE##
-【未來位】：定義「趨勢」與「代價」
-
-寫什麼：
-依照現在的能量慣性，事情會發展出的自然結果。為了抵達這個結果，你需要付出的心理調整（代價）。這張牌給予的最終警示或祝福。
-
-關鍵句必須包含：「如果你採取行動，最終會趨向於...，但這需要你學會...」
-
-要求：至少 80 字，用流暢段落書寫，緊扣求問者的問題「${question}」，具體說明這張牌在未來位的意義。
+【未來位】趨勢與代價：依現在的能量慣性，自然結果是什麼？需要付出什麼心理調整才能抵達？緊扣問題具體解讀，嚴格限制在 80 字以內。
 
 ##ACTION##
-根據以上三張牌的整體訊息，針對求問者的問題「${question}」，給出 3 個具體可執行的行動建議。每個建議至少 30 字，說清楚做什麼、怎麼做、為什麼這樣做。編號列出。最後加一句心態提醒。`;
+針對問題「${question}」給出 3 個具體行動建議，編號列出，每條一句話說清楚做什麼。最後一句心態提醒。`;
 
   try{
     const res=await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${GEMINI_KEY}`,
       {method:'POST',headers:{'Content-Type':'application/json'},
-       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:6000}})});
+       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:2000}})});
 
     if(!res.ok){
       const errData=await res.json().catch(()=>({}));
