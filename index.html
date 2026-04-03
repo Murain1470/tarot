@@ -489,11 +489,14 @@ function updateFocus(idx,animate=true){
   const els=getCardEls();
   els.forEach((el,i)=>{
     el.classList.remove('is-focused');
-    const scale=i===idx?1.1:.9, yOff=i===idx?-8:0, bri=i===idx?1:.55;
+    // 取消縮放差異，只用亮度區分，避免邊緣牌跑出畫面
+    const dist = Math.abs(i - idx);
+    const bri = dist===0 ? 1 : dist===1 ? 0.75 : 0.5;
+    const yOff = i===idx ? -6 : 0;
     el.style.transition=animate?'transform .35s cubic-bezier(.4,0,.2,1),filter .3s':'none';
     const slot=selectedCards.findIndex(sc=>sc&&sc.deckIndex===i);
     const rotY=slot>=0?180:0;
-    el.style.transform=`translateY(${yOff}px) scale(${scale}) rotateY(${rotY}deg)`;
+    el.style.transform=`translateY(${yOff}px) rotateY(${rotY}deg)`;
     el.style.filter=`brightness(${bri})`;
     el.querySelector('.card-pos-label').textContent=slot>=0?POSITIONS[slot]:'';
   });
@@ -512,7 +515,7 @@ document.getElementById('select-card-btn').addEventListener('click',()=>{
   selectedCards[selectedSlot]={...cardData,deckIndex:focusedIndex};
   const el=getCardEls()[focusedIndex];
   el.classList.add('is-flipping'); el.classList.remove('idle-breathe');
-  el.style.transform=`translateY(-8px) scale(1.1) rotateY(180deg)`;
+  el.style.transform=`translateY(-6px) rotateY(180deg)`;
   el.querySelector('.card-pos-label').textContent=POSITIONS[selectedSlot];
   setTimeout(()=>el.classList.remove('is-flipping'),750);
   selectedSlot++;
@@ -727,3 +730,4 @@ function showToast(msg){const el=document.getElementById('toast');el.textContent
 </script>
 </body>
 </html>
+
