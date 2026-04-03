@@ -545,18 +545,35 @@ async function callGemini(){
 
 求問者的問題：${question}
 
-三張牌陣（過去・現在・未來）：
+三張牌陣：
 ${cardDesc}
 
-請用繁體中文進行深度解析，依照以下四個層次輸出，每個層次之間空一行。不要加標題符號或 markdown，直接輸出文字內容：
+請用繁體中文進行深度解析，嚴格依照以下格式與風格輸出，每個區塊之間空一行，不加任何 markdown 符號：
 
-第一層【牌面意象與核心能量】：解釋每一張牌在它所在位置（過去／現在／未來）的核心意義，以及針對求問者這個問題，它代表的具體心境或外在環境。每張牌各2-3句。
+【第一層：三張牌的個別解讀】
+針對每一張牌，先寫出「編號. 位置：牌名」作為小標，接著加一行引號包起來的核心關鍵字（例如「萬事具備，只欠行動」），然後用 3-4 句話解讀：這張牌在這個位置對於求問者的問題具體代表什麼心境或處境？它揭示了什麼？它在提醒求問者什麼？語氣像一位資深諮詢師在面對面說話，有溫度但直接。
 
-第二層【牌陣間的動態關聯】：不要只分開看牌。分析三張牌之間的能量流動——能量是卡住了還是順暢的？這組牌的整體敘事是什麼？它們合在一起說了一個什麼樣的故事？
+範例格式（照這個格式，換成實際的牌）：
+1. 過去：世界 (The World)
+「一個階段的圓滿與結束」
+這張牌出現在過去位，代表你不久前才完成了一個重要的里程碑……（繼續3-4句具體解讀）
 
-第三層【潛意識盲點】：根據這組牌，直接指出求問者目前可能「看漏了什麼」或「過度執著於什麼」。語氣直接但不說教，像一位誠實的朋友在說真話。
+2. 現在：魔術師 (The Magician)
+「萬事具備，只欠行動」
+魔術師代表創造力與資源整合……（繼續3-4句具體解讀）
 
-第四層【具體行動建議】：提供 2-3 個現在就可以開始做的實體行動，以及一個需要調整的心態建議。行動要具體可執行，不要空泛。`;
+3. 未來：節制 (Temperance)
+「磨合後的平衡與昇華」
+這是一張關於煉金術的牌……（繼續3-4句具體解讀）
+
+【第二層：牌陣間的動態關聯】
+分析三張牌之間的能量流動。能量是卡住了還是順暢流動的？這三張牌合在一起，在說一個什麼樣的故事？有沒有矛盾或張力需要特別指出？寫 3-4 句。
+
+【第三層：潛意識盲點】
+根據這組牌，直接指出求問者目前可能「看漏了什麼」或「過度執著於什麼」。語氣誠實直接，像朋友說真話，不說教。寫 2-3 句。
+
+【第四層：具體行動建議】
+提供 2-3 個現在就可以開始執行的具體行動（不要空泛，要說清楚做什麼），以及一個需要調整的核心心態。`;
 
   try{
     const res=await fetch(
@@ -576,26 +593,31 @@ ${cardDesc}
 }
 
 function renderReading(text){
-  const parts=text.trim().split(/\n\n+/);
-  const titles=['牌面意象與核心能量','牌陣間的動態關聯','潛意識盲點','具體行動建議'];
-  // Assign parts to sections; if AI gives more/fewer paragraphs, group remainder into last section
-  const sections=titles.map((_,i)=>{
-    if(i<3) return parts[i]||'';
-    return parts.slice(3).join('\n\n')||'';
-  });
+  // Split on the section markers we know AI will produce
+  // Sections are separated by blank lines; we group them into 4 buckets
+  const paras=text.trim().split(/\n\n+/);
 
-  document.getElementById('reading-content').innerHTML=sections.map((s,i)=>`
+  // Heuristic: first 3 paragraphs = individual card readings (one per card)
+  // 4th = dynamic relationship, 5th = blind spot, 6th+ = action plan
+  const titles=['三張牌的個別解讀','牌陣間的動態關聯','潛意識盲點','具體行動建議'];
+  const buckets=[
+    paras.slice(0,3).join('\n\n'),   // cards 1-3
+    paras[3]||'',
+    paras[4]||'',
+    paras.slice(5).join('\n\n')||paras[5]||''
+  ];
+
+  document.getElementById('reading-content').innerHTML=buckets.map((s,i)=>`
     <div class="reading-section">
       <div class="reading-section-title">${titles[i]}</div>
       <div class="reading-practical" id="section-${i}"></div>
     </div>`).join('');
 
-  // Typewrite each section in sequence
   function writeSection(i){
-    if(i>=sections.length)return;
+    if(i>=buckets.length)return;
     const el=document.getElementById(`section-${i}`);
-    if(!el)return;
-    typewrite(el, sections[i], 18, ()=>setTimeout(()=>writeSection(i+1), 300));
+    if(!el||!buckets[i])return writeSection(i+1);
+    typewrite(el, buckets[i], 16, ()=>setTimeout(()=>writeSection(i+1), 300));
   }
   writeSection(0);
 }
