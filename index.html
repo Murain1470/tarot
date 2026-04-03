@@ -309,30 +309,95 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
 // or it will ask in the reading screen.
 let GEMINI_KEY = window.GEMINI_API_KEY || '';
 
-// ═══ TAROT DATA ═══
+// ═══ TAROT DATA — 78 張完整牌庫 ═══
 const ALL_CARDS = [
-  {id:0, emoji:'🌟',num:'O',   name:'The Fool',        nameZh:'愚者',    keywords:['新生','冒險','無限可能'],  meaning:'靈魂踏上旅程的第一步，眼神仰望，毫不畏懼。'},
-  {id:1, emoji:'🔮',num:'I',   name:'The Magician',    nameZh:'魔術師',  keywords:['意志','創造','掌控'],     meaning:'你擁有將夢想化為現實的力量，所有工具就在手邊。'},
-  {id:2, emoji:'🌙',num:'II',  name:'High Priestess',  nameZh:'女祭司',  keywords:['直覺','神秘','潛意識'],   meaning:'答案早已藏在靈魂最深處的靜默之中。'},
-  {id:3, emoji:'👑',num:'III', name:'The Empress',     nameZh:'女皇',    keywords:['豐饒','母性','創造力'],   meaning:'大地之母的能量湧現，滋養與豐收的季節到來。'},
-  {id:4, emoji:'⚡',num:'IV',  name:'The Emperor',     nameZh:'皇帝',    keywords:['權威','秩序','穩定'],     meaning:'建立結構，以理性與意志掌舵混亂。'},
-  {id:5, emoji:'🙏',num:'V',   name:'The Hierophant',  nameZh:'教皇',    keywords:['傳統','智慧','信仰'],     meaning:'在傳承的智慧中尋找你的真理。'},
-  {id:6, emoji:'💞',num:'VI',  name:'The Lovers',      nameZh:'戀人',    keywords:['選擇','連結','價值觀'],   meaning:'面臨的不只是感情抉擇，而是靈魂深處的選擇。'},
-  {id:7, emoji:'🏆',num:'VII', name:'The Chariot',     nameZh:'戰車',    keywords:['意志力','勝利','前進'],   meaning:'駕馭相反的力量，以意志衝破一切阻礙。'},
-  {id:8, emoji:'🦁',num:'VIII',name:'Strength',        nameZh:'力量',    keywords:['內在力量','勇氣','耐心'], meaning:'真正的力量來自溫柔的掌控，而非蠻力。'},
-  {id:9, emoji:'🕯️',num:'IX',  name:'The Hermit',      nameZh:'隱者',    keywords:['孤獨','內省','尋真'],     meaning:'在獨處的燈火中，找到照亮他人的智慧。'},
-  {id:10,emoji:'☯️',num:'X',   name:'Wheel of Fortune',nameZh:'命運之輪',keywords:['命運','循環','轉機'],    meaning:'輪子永恆轉動，此刻的困境終將成為轉機。'},
-  {id:11,emoji:'⚖️',num:'XI',  name:'Justice',         nameZh:'正義',    keywords:['公平','因果','真相'],     meaning:'宇宙自有其法則，誠實面對因果。'},
-  {id:12,emoji:'🌊',num:'XII', name:'The Hanged Man',  nameZh:'倒吊人',  keywords:['暫停','犧牲','新視角'],   meaning:'主動放手，才能看見顛倒世界的全新真相。'},
-  {id:13,emoji:'🦋',num:'XIII',name:'Death',           nameZh:'死神',    keywords:['轉化','結束','重生'],     meaning:'並非終結，而是蛻變——舊我謝幕，新生的序章。'},
-  {id:14,emoji:'🌈',num:'XIV', name:'Temperance',      nameZh:'節制',    keywords:['平衡','融合','耐心'],     meaning:'在流動中尋求平衡，急流與靜水之間自有道路。'},
-  {id:15,emoji:'🔗',num:'XV',  name:'The Devil',       nameZh:'惡魔',    keywords:['束縛','執念','陰影'],     meaning:'你以為的枷鎖，其實從未真正鎖住你。'},
-  {id:16,emoji:'🌩️',num:'XVI', name:'The Tower',       nameZh:'塔',      keywords:['震撼','崩解','清醒'],     meaning:'虛假的高塔必然倒塌，廢墟才是重建的起點。'},
-  {id:17,emoji:'⭐',num:'XVII',name:'The Star',        nameZh:'星星',    keywords:['希望','療癒','信念'],     meaning:'黑夜最深處，那顆恆星從未熄滅。'},
-  {id:18,emoji:'🌕',num:'XVIII',name:'The Moon',       nameZh:'月亮',    keywords:['幻象','潛意識','迷惘'],   meaning:'月光之下，幻影與真實交織——信任你的直覺。'},
-  {id:19,emoji:'☀️',num:'XIX', name:'The Sun',         nameZh:'太陽',    keywords:['喜悅','成功','光明'],     meaning:'光明驅散一切陰影，喜悅如孩童般自在奔跑。'},
-  {id:20,emoji:'📯',num:'XX',  name:'Judgement',       nameZh:'審判',    keywords:['覺醒','召喚','重生'],     meaning:'號角響起，你被召喚去成為更高版本的自己。'},
-  {id:21,emoji:'🌍',num:'XXI', name:'The World',       nameZh:'世界',    keywords:['完成','整合','圓滿'],     meaning:'一個循環圓滿完成，宇宙向你致意。'},
+  // ── 大阿爾克那 Major Arcana (0-21) ──
+  {id:0, suit:'major',emoji:'🌟',num:'0',   name:'The Fool',         nameZh:'愚者',    keywords:['新生','冒險','無限可能'],   meaning:'靈魂踏上旅程的第一步，眼神仰望，毫不畏懼。'},
+  {id:1, suit:'major',emoji:'🔮',num:'I',   name:'The Magician',     nameZh:'魔術師',  keywords:['意志','創造','資源整合'],   meaning:'你擁有將夢想化為現實的力量，所有工具就在手邊。'},
+  {id:2, suit:'major',emoji:'🌙',num:'II',  name:'High Priestess',   nameZh:'女祭司',  keywords:['直覺','神秘','潛意識'],    meaning:'答案早已藏在靈魂最深處的靜默之中。'},
+  {id:3, suit:'major',emoji:'👑',num:'III', name:'The Empress',      nameZh:'女皇',    keywords:['豐饒','母性','創造力'],    meaning:'大地之母的能量湧現，滋養與豐收的季節到來。'},
+  {id:4, suit:'major',emoji:'⚡',num:'IV',  name:'The Emperor',      nameZh:'皇帝',    keywords:['權威','秩序','穩定'],      meaning:'建立結構，以理性與意志掌舵混亂。'},
+  {id:5, suit:'major',emoji:'🙏',num:'V',   name:'The Hierophant',   nameZh:'教皇',    keywords:['傳統','智慧','信仰'],      meaning:'在傳承的智慧中尋找你的真理。'},
+  {id:6, suit:'major',emoji:'💞',num:'VI',  name:'The Lovers',       nameZh:'戀人',    keywords:['選擇','連結','價值觀'],    meaning:'面臨的不只是感情抉擇，而是靈魂深處的選擇。'},
+  {id:7, suit:'major',emoji:'🏆',num:'VII', name:'The Chariot',      nameZh:'戰車',    keywords:['意志力','勝利','前進'],    meaning:'駕馭相反的力量，以意志衝破一切阻礙。'},
+  {id:8, suit:'major',emoji:'🦁',num:'VIII',name:'Strength',         nameZh:'力量',    keywords:['內在力量','勇氣','耐心'],  meaning:'真正的力量來自溫柔的掌控，而非蠻力。'},
+  {id:9, suit:'major',emoji:'🕯️',num:'IX',  name:'The Hermit',       nameZh:'隱者',    keywords:['孤獨','內省','尋真'],      meaning:'在獨處的燈火中，找到照亮他人的智慧。'},
+  {id:10,suit:'major',emoji:'☯️',num:'X',   name:'Wheel of Fortune', nameZh:'命運之輪',keywords:['命運','循環','轉機'],      meaning:'輪子永恆轉動，此刻的困境終將成為轉機。'},
+  {id:11,suit:'major',emoji:'⚖️',num:'XI',  name:'Justice',          nameZh:'正義',    keywords:['公平','因果','真相'],      meaning:'宇宙自有其法則，誠實面對因果。'},
+  {id:12,suit:'major',emoji:'🌊',num:'XII', name:'The Hanged Man',   nameZh:'倒吊人',  keywords:['暫停','犧牲','新視角'],    meaning:'主動放手，才能看見顛倒世界的全新真相。'},
+  {id:13,suit:'major',emoji:'🦋',num:'XIII',name:'Death',            nameZh:'死神',    keywords:['轉化','結束','重生'],      meaning:'並非終結，而是蛻變——舊我謝幕，新生的序章。'},
+  {id:14,suit:'major',emoji:'🌈',num:'XIV', name:'Temperance',       nameZh:'節制',    keywords:['平衡','融合','耐心'],      meaning:'在流動中尋求平衡，急流與靜水之間自有道路。'},
+  {id:15,suit:'major',emoji:'🔗',num:'XV',  name:'The Devil',        nameZh:'惡魔',    keywords:['束縛','執念','陰影'],      meaning:'你以為的枷鎖，其實從未真正鎖住你。'},
+  {id:16,suit:'major',emoji:'🌩️',num:'XVI', name:'The Tower',        nameZh:'塔',      keywords:['震撼','崩解','清醒'],      meaning:'虛假的高塔必然倒塌，廢墟才是重建的起點。'},
+  {id:17,suit:'major',emoji:'⭐',num:'XVII',name:'The Star',         nameZh:'星星',    keywords:['希望','療癒','信念'],      meaning:'黑夜最深處，那顆恆星從未熄滅。'},
+  {id:18,suit:'major',emoji:'🌕',num:'XVIII',name:'The Moon',        nameZh:'月亮',    keywords:['幻象','潛意識','迷惘'],    meaning:'月光之下，幻影與真實交織——信任你的直覺。'},
+  {id:19,suit:'major',emoji:'☀️',num:'XIX', name:'The Sun',          nameZh:'太陽',    keywords:['喜悅','成功','光明'],      meaning:'光明驅散一切陰影，喜悅如孩童般自在奔跑。'},
+  {id:20,suit:'major',emoji:'📯',num:'XX',  name:'Judgement',        nameZh:'審判',    keywords:['覺醒','召喚','重生'],      meaning:'號角響起，你被召喚去成為更高版本的自己。'},
+  {id:21,suit:'major',emoji:'🌍',num:'XXI', name:'The World',        nameZh:'世界',    keywords:['完成','整合','圓滿'],      meaning:'一個循環圓滿完成，宇宙向你致意。'},
+
+  // ── 權杖 Wands（火元素：行動、熱情、創造、事業）──
+  {id:22,suit:'wands',emoji:'🔥',num:'Ace', name:'Ace of Wands',     nameZh:'權杖王牌',keywords:['新開始','靈感爆發','行動衝動'],  meaning:'一股強烈的創造衝動正在萌發，是啟動新計劃的最佳時機。'},
+  {id:23,suit:'wands',emoji:'🕯️',num:'2',   name:'Two of Wands',     nameZh:'權杖二',  keywords:['規劃','遠見','待機而動'],        meaning:'你已站在高處眺望遠方，現在是謀定而後動的時刻。'},
+  {id:24,suit:'wands',emoji:'🌄',num:'3',   name:'Three of Wands',   nameZh:'權杖三',  keywords:['擴展','等待成果','前瞻'],        meaning:'計劃已經啟動，船已出港，等待第一批成果回航。'},
+  {id:25,suit:'wands',emoji:'🎪',num:'4',   name:'Four of Wands',    nameZh:'權杖四',  keywords:['慶祝','里程碑','穩定基礎'],      meaning:'一個階段圓滿完成，值得停下來慶祝這份成就。'},
+  {id:26,suit:'wands',emoji:'⚔️',num:'5',   name:'Five of Wands',    nameZh:'權杖五',  keywords:['競爭','衝突','多方角力'],        meaning:'四面而來的競爭與意見分歧，需要在混亂中找到自己的立場。'},
+  {id:27,suit:'wands',emoji:'🏅',num:'6',   name:'Six of Wands',     nameZh:'權杖六',  keywords:['勝利','公眾認可','自信'],        meaning:'努力獲得了眾人的肯定，勝利凱旋的時刻到來。'},
+  {id:28,suit:'wands',emoji:'🛡️',num:'7',   name:'Seven of Wands',   nameZh:'權杖七',  keywords:['防守','堅守立場','挑戰'],        meaning:'站在高處捍衛自己的成果，不輕易讓步才能守住優勢。'},
+  {id:29,suit:'wands',emoji:'💨',num:'8',   name:'Eight of Wands',   nameZh:'權杖八',  keywords:['快速進展','行動力','訊息'],      meaning:'事情正在快速推進，保持靈活應變，抓住這股順風。'},
+  {id:30,suit:'wands',emoji:'😓',num:'9',   name:'Nine of Wands',    nameZh:'權杖九',  keywords:['韌性','疲憊','最後關卡'],        meaning:'你已走了很長的路，雖然疲憊，但終點就在眼前，再撐一下。'},
+  {id:31,suit:'wands',emoji:'😩',num:'10',  name:'Ten of Wands',     nameZh:'權杖十',  keywords:['重擔','過度承擔','壓力'],        meaning:'你承擔了太多，學會分工或放下一些責任是當務之急。'},
+  {id:32,suit:'wands',emoji:'🧒',num:'Page',name:'Page of Wands',    nameZh:'權杖侍從',keywords:['探索','熱忱','新想法'],          meaning:'帶著孩子般的熱情去探索新領域，不怕失敗的勇氣是你的武器。'},
+  {id:33,suit:'wands',emoji:'🏇',num:'Knt', name:'Knight of Wands',  nameZh:'權杖騎士',keywords:['衝動','冒險','全力以赴'],        meaning:'充滿行動力但可能過於衝動，熱情是優點，但需要方向感。'},
+  {id:34,suit:'wands',emoji:'👸',num:'Q',   name:'Queen of Wands',   nameZh:'權杖皇后',keywords:['自信','魅力','獨立'],            meaning:'充滿自信與魅力，以溫暖的領導力感染周圍的人。'},
+  {id:35,suit:'wands',emoji:'🤴',num:'K',   name:'King of Wands',    nameZh:'權杖國王',keywords:['領導','遠見','創業精神'],        meaning:'以成熟的眼光和強大的意志力帶領眾人，是天生的領導者。'},
+
+  // ── 聖杯 Cups（水元素：情感、關係、直覺、夢想）──
+  {id:36,suit:'cups',emoji:'💧',num:'Ace', name:'Ace of Cups',      nameZh:'聖杯王牌',keywords:['新感情','情感流動','愛的開始'], meaning:'心扉敞開，新的愛與連結正在向你湧來。'},
+  {id:37,suit:'cups',emoji:'🤝',num:'2',   name:'Two of Cups',      nameZh:'聖杯二',  keywords:['吸引','夥伴關係','共鳴'],       meaning:'兩個靈魂相遇，彼此吸引，建立深刻的情感連結。'},
+  {id:38,suit:'cups',emoji:'🥂',num:'3',   name:'Three of Cups',    nameZh:'聖杯三',  keywords:['慶祝','友誼','社群喜悅'],       meaning:'與摯友共同慶祝，在愛與歡笑中感受生命的豐盛。'},
+  {id:39,suit:'cups',emoji:'😔',num:'4',   name:'Four of Cups',     nameZh:'聖杯四',  keywords:['冷漠','無聊','錯過機會'],       meaning:'沉浸在過去的不滿中，可能正在錯過眼前伸出的新機會。'},
+  {id:40,suit:'cups',emoji:'😢',num:'5',   name:'Five of Cups',     nameZh:'聖杯五',  keywords:['失落','悲傷','遺憾'],           meaning:'為已失去的而悲傷是正常的，但別忘了身後仍有杯子未傾覆。'},
+  {id:41,suit:'cups',emoji:'🏡',num:'6',   name:'Six of Cups',      nameZh:'聖杯六',  keywords:['懷舊','童年','純真'],           meaning:'過去的美好記憶帶來溫暖，但也要記得活在當下。'},
+  {id:42,suit:'cups',emoji:'🌫️',num:'7',   name:'Seven of Cups',    nameZh:'聖杯七',  keywords:['幻想','選擇太多','迷失'],       meaning:'面對太多誘人的可能性，容易在幻想中迷失，需要腳踏實地。'},
+  {id:43,suit:'cups',emoji:'🚶',num:'8',   name:'Eight of Cups',    nameZh:'聖杯八',  keywords:['離開','尋求更多','轉身'],       meaning:'即使眼前已有所成，內心仍渴望更有意義的事物，勇敢轉身。'},
+  {id:44,suit:'cups',emoji:'😊',num:'9',   name:'Nine of Cups',     nameZh:'聖杯九',  keywords:['滿足','願望成真','享樂'],       meaning:'願望之牌——你所渴望的正在實現，享受這份得來不易的滿足。'},
+  {id:45,suit:'cups',emoji:'👨‍👩‍👧‍👦',num:'10', name:'Ten of Cups',     nameZh:'聖杯十',  keywords:['家庭幸福','圓滿','長久'],       meaning:'情感上最圓滿的狀態，家庭與愛情都達到了和諧的頂點。'},
+  {id:46,suit:'cups',emoji:'🧒',num:'Page',name:'Page of Cups',     nameZh:'聖杯侍從',keywords:['創意','浪漫','情感訊息'],       meaning:'帶著夢想與好奇心接近情感，一個意想不到的好消息可能到來。'},
+  {id:47,suit:'cups',emoji:'🐟',num:'Knt', name:'Knight of Cups',   nameZh:'聖杯騎士',keywords:['浪漫','追求','理想主義'],       meaning:'騎著白馬追求夢想的人，充滿詩意但需要落實行動。'},
+  {id:48,suit:'cups',emoji:'👸',num:'Q',   name:'Queen of Cups',    nameZh:'聖杯皇后',keywords:['同理心','直覺','情感智慧'],     meaning:'以深刻的同理心理解他人，直覺極為準確，是療癒者的原型。'},
+  {id:49,suit:'cups',emoji:'🤴',num:'K',   name:'King of Cups',     nameZh:'聖杯國王',keywords:['情感成熟','平衡','智慧'],       meaning:'能夠在感性與理性之間保持平衡，以成熟的情感智慧引導他人。'},
+
+  // ── 寶劍 Swords（風元素：思維、衝突、真相、溝通）──
+  {id:50,suit:'swords',emoji:'💡',num:'Ace', name:'Ace of Swords',   nameZh:'寶劍王牌',keywords:['真相','突破','清晰思維'],       meaning:'一道清明的光劃破迷霧，真相浮現，做出清晰決斷的時刻。'},
+  {id:51,suit:'swords',emoji:'🤐',num:'2',   name:'Two of Swords',   nameZh:'寶劍二',  keywords:['僵局','迴避','難以抉擇'],       meaning:'蒙著眼睛拒絕看清真相，是時候摘下眼罩，直面那個困難的選擇。'},
+  {id:52,suit:'swords',emoji:'💔',num:'3',   name:'Three of Swords', nameZh:'寶劍三',  keywords:['心碎','悲傷','失望'],           meaning:'心被刺穿的痛苦是真實的，允許自己哀傷，然後讓療癒開始。'},
+  {id:53,suit:'swords',emoji:'😴',num:'4',   name:'Four of Swords',  nameZh:'寶劍四',  keywords:['休養','冥想','暫時撤退'],       meaning:'強迫性地休息並非軟弱，而是為下一場戰役積蓄力量。'},
+  {id:54,suit:'swords',emoji:'😈',num:'5',   name:'Five of Swords',  nameZh:'寶劍五',  keywords:['衝突','失敗','不道德勝利'],     meaning:'即使贏了這場爭鬥，代價是否值得？有些勝利其實是敗北。'},
+  {id:55,suit:'swords',emoji:'⛵',num:'6',   name:'Six of Swords',   nameZh:'寶劍六',  keywords:['過渡','離開風暴','康復'],       meaning:'離開動盪的水域，平靜的彼岸已在前方，這是艱難但必要的旅程。'},
+  {id:56,suit:'swords',emoji:'🦹',num:'7',   name:'Seven of Swords', nameZh:'寶劍七',  keywords:['策略','逃避','不誠實'],         meaning:'有人在耍心機，可能是別人，也可能是你自己在欺騙自己。'},
+  {id:57,suit:'swords',emoji:'⛓️',num:'8',   name:'Eight of Swords', nameZh:'寶劍八',  keywords:['受困','自我限制','思維囚籠'],   meaning:'你以為的束縛大多來自自己的思維，解開眼罩你就能自由行走。'},
+  {id:58,suit:'swords',emoji:'😰',num:'9',   name:'Nine of Swords',  nameZh:'寶劍九',  keywords:['焦慮','噩夢','過度擔憂'],       meaning:'深夜的恐懼讓你輾轉難眠，但那些最壞的情境多半只存在於腦海。'},
+  {id:59,suit:'swords',emoji:'💀',num:'10',  name:'Ten of Swords',   nameZh:'寶劍十',  keywords:['終結','背叛','觸底反彈'],       meaning:'已經到了最低點，但最黑暗的時刻也意味著黎明即將到來。'},
+  {id:60,suit:'swords',emoji:'🧒',num:'Page',name:'Page of Swords',  nameZh:'寶劍侍從',keywords:['好奇','警覺','新想法'],         meaning:'思維敏銳，充滿好奇心，但說話前要三思，避免口無遮攔。'},
+  {id:61,suit:'swords',emoji:'🌪️',num:'Knt', name:'Knight of Swords',nameZh:'寶劍騎士',keywords:['急衝','直接','果斷'],           meaning:'行動力十足但過於衝動，在全速前進前記得先確認方向正確。'},
+  {id:62,suit:'swords',emoji:'👸',num:'Q',   name:'Queen of Swords', nameZh:'寶劍皇后',keywords:['獨立','犀利','直接'],           meaning:'思維清晰，直話直說，不被情緒左右，以理性和經驗做出判斷。'},
+  {id:63,suit:'swords',emoji:'🤴',num:'K',   name:'King of Swords',  nameZh:'寶劍國王',keywords:['權威','邏輯','公正'],           meaning:'以冷靜的頭腦和強大的邏輯分析一切，是理性決策的最高境界。'},
+
+  // ── 星幣 Pentacles（土元素：金錢、物質、工作、健康）──
+  {id:64,suit:'pents',emoji:'🌱',num:'Ace', name:'Ace of Pentacles', nameZh:'星幣王牌',keywords:['新機遇','物質開始','財富種子'], meaning:'一個嶄新的物質機會正在萌芽，好好栽培這顆種子。'},
+  {id:65,suit:'pents',emoji:'🤹',num:'2',   name:'Two of Pentacles', nameZh:'星幣二',  keywords:['平衡','多工','靈活應變'],       meaning:'同時兼顧多件事，需要在變動中保持靈活的平衡感。'},
+  {id:66,suit:'pents',emoji:'🎓',num:'3',   name:'Three of Pentacles',nameZh:'星幣三', keywords:['技藝','合作','學習'],           meaning:'精進技術、與他人合作，是這個階段最重要的兩件事。'},
+  {id:67,suit:'pents',emoji:'💰',num:'4',   name:'Four of Pentacles',nameZh:'星幣四',  keywords:['守財','安全感','控制'],         meaning:'過度抓緊財物或控制感，反而阻礙了更大的流動與豐盛。'},
+  {id:68,suit:'pents',emoji:'😿',num:'5',   name:'Five of Pentacles',nameZh:'星幣五',  keywords:['匱乏','困難','孤立'],           meaning:'物質或精神上的匱乏感襲來，記得抬頭看，幫助就在身旁。'},
+  {id:69,suit:'pents',emoji:'🤲',num:'6',   name:'Six of Pentacles', nameZh:'星幣六',  keywords:['給予','分享','慷慨'],           meaning:'財富的流動在於給予與接受，慷慨付出的同時也願意接受幫助。'},
+  {id:70,suit:'pents',emoji:'🌾',num:'7',   name:'Seven of Pentacles',nameZh:'星幣七', keywords:['等待收成','評估','耐心'],       meaning:'已努力播種，現在是等待成果的時期，評估方向是否需要調整。'},
+  {id:71,suit:'pents',emoji:'🔨',num:'8',   name:'Eight of Pentacles',nameZh:'星幣八', keywords:['勤奮','工藝','專注'],           meaning:'埋頭精進技術，重複的練習正在打磨你成為真正的專家。'},
+  {id:72,suit:'pents',emoji:'🏡',num:'9',   name:'Nine of Pentacles',nameZh:'星幣九',  keywords:['豐盛','獨立','自給自足'],       meaning:'靠自己的努力創造出豐足的生活，享受這份得來不易的自由。'},
+  {id:73,suit:'pents',emoji:'👨‍👩‍👧',num:'10', name:'Ten of Pentacles',nameZh:'星幣十',  keywords:['家族財富','傳承','長遠穩定'],   meaning:'長遠的財富積累與家族傳承，是物質層面最圓滿的狀態。'},
+  {id:74,suit:'pents',emoji:'🧒',num:'Page',name:'Page of Pentacles',nameZh:'星幣侍從',keywords:['學習','實踐','踏實起步'],       meaning:'以認真踏實的態度學習新技能，每一步都是未來財富的基石。'},
+  {id:75,suit:'pents',emoji:'🐎',num:'Knt', name:'Knight of Pentacles',nameZh:'星幣騎士',keywords:['可靠','勤勞','慢而穩'],       meaning:'不是最快的，但是最可靠的，穩健紮實的努力終將帶來成果。'},
+  {id:76,suit:'pents',emoji:'👸',num:'Q',   name:'Queen of Pentacles',nameZh:'星幣皇后',keywords:['務實','滋養','生活智慧'],      meaning:'以務實的智慧照顧好自己與周圍的人，將愛體現在日常的細節裡。'},
+  {id:77,suit:'pents',emoji:'🤴',num:'K',   name:'King of Pentacles',nameZh:'星幣國王',keywords:['財富掌控','成就','可靠'],       meaning:'以穩健的判斷力累積了巨大的物質成就，是可信賴的支柱。'},
 ];
 
 const POSITIONS = ['過去','現在','未來'];
@@ -540,7 +605,8 @@ function showApiKeyPrompt(){
 
 async function callGemini(){
   const content=document.getElementById('reading-content');
-  const cardDesc=selectedCards.map((sc,i)=>`${POSITIONS[i]}（${POS_HINT[i]}）：${sc.nameZh}（${sc.name}）— 關鍵字：${sc.keywords.join('、')}`).join('\n');
+  const suitLabel={major:'大阿爾克那',wands:'權杖／火元素',cups:'聖杯／水元素',swords:'寶劍／風元素',pents:'星幣／土元素'};
+  const cardDesc=selectedCards.map((sc,i)=>`${POSITIONS[i]}（${POS_HINT[i]}）：${sc.nameZh}（${sc.name}）［${suitLabel[sc.suit]}］— 關鍵字：${sc.keywords.join('、')}`).join('\n');
   const prompt=`你是一位具備 20 年經驗的資深塔羅諮詢師，擅長結合傳統神秘學符號、榮格原型心理學以及教練式引導（Coaching）。你的風格理性與感性並重，不僅解釋牌面意義，更能洞察求問者潛意識中的盲點，並給予務實的行動建議。
 
 求問者的問題：${question}
