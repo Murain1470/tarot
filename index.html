@@ -464,9 +464,10 @@ document.getElementById('calibrate-btn').addEventListener('click',()=>{
 // ═══ GYROSCOPE ═══
 function handleOrientation(e){
   if(e.gamma===null||!document.getElementById('s-cards').classList.contains('active'))return;
-  const g=Math.max(-50,Math.min(50,e.gamma-gammaRef));
+  // 角度門檻擴大到 ±75°，需要更大幅度傾斜才能跑完整排
+  const g=Math.max(-75,Math.min(75,e.gamma-gammaRef));
   const maxOff=(cards.length-1)*CARD_STEP*.5;
-  targetX=-(g/50)*maxOff;
+  targetX=-(g/75)*maxOff;
 }
 let lastAcc={x:0,y:0,z:0},shakeThrottle=false;
 function handleMotion(e){
@@ -540,26 +541,30 @@ function showApiKeyPrompt(){
 async function callGemini(){
   const content=document.getElementById('reading-content');
   const cardDesc=selectedCards.map((sc,i)=>`${POSITIONS[i]}（${POS_HINT[i]}）：${sc.nameZh}（${sc.name}）— 關鍵字：${sc.keywords.join('、')}`).join('\n');
-  const prompt=`你是一位融合東方玄學與西方塔羅智慧的解牌師，語氣充滿詩意但也給出實際建議。
+  const past=selectedCards[0]?.nameZh, present=selectedCards[1]?.nameZh, future=selectedCards[2]?.nameZh;
+  const prompt=`你是一位經驗豐富的塔羅解讀師，解讀具體、深入、有溫度，避免模糊的泛泛之詞。
 
-問題：${question}
+提問者的問題：${question}
 
-三張牌陣（過去・現在・未來）：
+三張牌：
 ${cardDesc}
 
-請用繁體中文，分兩段解讀：
+請用繁體中文，輸出以下兩個段落，段落之間空一行，不要加任何標題文字：
 
-第一段【詩意感悟】：用富有意境的語言（3-4句）描述三張牌共同傳遞的靈性訊息，文字需優美、有畫面感。
+第一段：用2-3句充滿意象的語言，描述這三張牌組合的整體氛圍與命運走向，讓人讀完有「被看見」的感受。
 
-第二段【實際指引】：針對提問者的具體問題給出務實可行的建議（4-5句），涵蓋過去根源、現在課題、未來展望與行動建議。
+第二段：分三個部分具體解讀，每部分2-3句：
+過去（${past}）：這張牌說明了什麼根源或過去的決定，如何影響到現在的處境？
+現在（${present}）：提問者現在面臨的核心挑戰或機會是什麼？這張牌要他們正視哪件事？
+未來（${future}）：如果按照牌的指引，未來走向如何？有什麼具體的事情需要去做或避免？
 
-兩段之間用一個空行分隔。不要加標題文字，直接輸出內容。`;
+語氣誠懇貼近生活，像朋友在認真回答，不說教。`;
 
   try{
     const res=await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
       {method:'POST',headers:{'Content-Type':'application/json'},
-       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.9,maxOutputTokens:700}})});
+       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:1000}})});
     if(!res.ok)throw new Error(res.status);
     const data=await res.json();
     const text=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
@@ -617,3 +622,4 @@ function showToast(msg){const el=document.getElementById('toast');el.textContent
 </script>
 </body>
 </html>
+
