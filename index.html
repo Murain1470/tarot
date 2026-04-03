@@ -655,15 +655,19 @@ ${cardDesc}
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
       {method:'POST',headers:{'Content-Type':'application/json'},
        body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:6000}})});
-    if(!res.ok)throw new Error(res.status);
+
+    if(!res.ok){
+      const errData=await res.json().catch(()=>({}));
+      const errMsg=errData?.error?.message||`HTTP ${res.status}`;
+      showApiError(errMsg);
+      return;
+    }
     const data=await res.json();
     const text=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
-    if(!text)throw new Error('empty');
+    if(!text){ showApiError('API 回傳空內容'); return; }
     renderReading(text);
   }catch(e){
-    console.error(e);
-    if(e.message==='400'||e.message==='403'){GEMINI_KEY='';showToast('API Key 無效，請重新輸入');showApiKeyPrompt();}
-    else showFallback();
+    showApiError(e.message||'網路錯誤');
   }
 }
 
@@ -720,6 +724,18 @@ function typewrite(el,text,speed,onDone){
   },speed);
 }
 
+function showApiError(msg){
+  const content=document.getElementById('reading-content');
+  content.innerHTML=`
+    <div style="padding:24px;border:1px solid rgba(201,168,76,.2);border-radius:4px;margin-top:8px;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:.2em;color:var(--gold-dim);margin-bottom:12px;">API 錯誤</div>
+      <div style="font-size:13px;color:rgba(240,208,128,.7);line-height:1.8;word-break:break-all;">${msg}</div>
+      <div style="display:flex;gap:12px;margin-top:20px;">
+        <button onclick="GEMINI_KEY='';showApiKeyPrompt();" style="flex:1;background:none;border:1px solid rgba(201,168,76,.3);color:rgba(201,168,76,.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;padding:10px;cursor:pointer;">重新輸入 Key</button>
+        <button onclick="showFallback();" style="flex:1;background:none;border:1px solid rgba(201,168,76,.2);color:rgba(201,168,76,.4);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;padding:10px;cursor:pointer;">略過・基礎解讀</button>
+      </div>
+    </div>`;
+}
 function showFallback(){
   const [p,n,f]=selectedCards;
   const poetic=`${p.nameZh}的印記刻在你的根源之中，那份${p.keywords[0]}的記憶塑造了今日的你。${n.nameZh}此刻佇立眼前，呼喚你正視${n.keywords[1]}的課題。而遠方，${f.nameZh}正悄然舒展，以${f.keywords[2]}為你鋪就前行的道路。`;
