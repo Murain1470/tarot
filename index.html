@@ -172,8 +172,8 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
 .card-front { transform:rotateY(180deg); background:linear-gradient(160deg,#1c1030 0%,#0a061a 100%); border:1px solid rgba(201,168,76,.45); display:flex; flex-direction:column; align-items:center; padding:8px 6px; }
 .card-front-border { position:absolute; inset:5px; border:1px solid rgba(201,168,76,.18); border-radius:4px; pointer-events:none; }
 .card-number { font-family:'Cinzel',serif; font-size:8px; letter-spacing:.3em; color:var(--gold-dim); margin-bottom:3px; }
-.card-artwork { width:100%; flex:1; display:flex; align-items:center; justify-content:center; font-size:44px; position:relative; overflow:hidden; }
-.card-artwork img { width:100%; height:100%; object-fit:cover; border-radius:3px; display:block; }
+.card-artwork { width:100%; height:144px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:44px; position:relative; overflow:hidden; border-radius:3px; }
+.card-artwork img { width:100%; height:100%; object-fit:cover; display:block; }
 .card-artwork-glow { position:absolute; inset:0; background:radial-gradient(ellipse,rgba(201,168,76,.1) 0%,transparent 70%); }
 .card-name { font-family:'Cinzel',serif; font-size:8px; letter-spacing:.18em; color:var(--gold); text-align:center; margin-top:4px; line-height:1.4; }
 .card-name-zh { font-size:8px; color:rgba(201,168,76,.55); margin-top:2px; }
@@ -257,12 +257,12 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
 .holo-face-border { position:absolute; inset:4px; border:1px solid rgba(201,168,76,.18); border-radius:5px; pointer-events:none; z-index:3; }
 .holo-card-num { font-family:'Cinzel',serif; font-size:7px; letter-spacing:.25em; color:var(--gold-dim); margin-bottom:2px; position:relative; z-index:2; }
 .holo-art-layer {
-  width:100%; flex:1;
+  width:100%; height:96px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
   position:relative; z-index:2; font-size:34px;
-  will-change:transform; overflow:hidden;
+  will-change:transform; overflow:hidden; border-radius:2px;
 }
-.holo-art-layer img { width:100%; height:100%; object-fit:cover; border-radius:2px; display:block; }
+.holo-art-layer img { width:100%; height:100%; object-fit:cover; display:block; }
 .holo-art-glow { position:absolute; inset:0; background:radial-gradient(ellipse,rgba(201,168,76,.13) 0%,transparent 70%); pointer-events:none; }
 .holo-card-name { font-family:'Cinzel',serif; font-size:6.5px; letter-spacing:.14em; color:var(--gold); text-align:center; line-height:1.4; position:relative; z-index:2; }
 .holo-card-zh { font-size:6.5px; color:rgba(201,168,76,.5); margin-top:2px; position:relative; z-index:2; }
