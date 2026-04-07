@@ -147,10 +147,11 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
 .ambient-glow { position:absolute; border-radius:50%; filter:blur(60px); opacity:.1; }
 .glow-1 { width:180px; height:180px; background:var(--purple-glow); top:15%; left:5%; }
 .glow-2 { width:140px; height:140px; background:#1f5a99; bottom:20%; right:5%; }
-.card-strip { display:flex; align-items:center; gap:var(--gap); position:relative; z-index:1; transform-style:preserve-3d; will-change:transform; padding:30px 50px; }
+.card-strip { display:flex; align-items:center; gap:0; position:relative; z-index:1; transform-style:preserve-3d; will-change:transform; padding:30px 60px; }
 
 /* ── CARD ── */
-.tarot-card { width:var(--card-w); height:var(--card-h); flex-shrink:0; position:relative; transform-style:preserve-3d; cursor:pointer; border-radius:8px; }
+.tarot-card { width:var(--card-w); height:var(--card-h); flex-shrink:0; position:relative; transform-style:preserve-3d; cursor:pointer; border-radius:8px; margin-left:-92px; }
+.tarot-card:first-child { margin-left:0; }
 .tarot-card.is-flipping { transition:transform .75s cubic-bezier(.4,0,.2,1) !important; }
 .card-face { position:absolute; inset:0; border-radius:8px; backface-visibility:hidden; -webkit-backface-visibility:hidden; overflow:hidden; }
 .card-back { background:var(--purple-mid); border:1px solid rgba(201,168,76,.3); display:flex; align-items:center; justify-content:center; }
@@ -831,7 +832,7 @@ function renderLoop(){
     // Tilt angle drives velocity (acceleration model)
     // Small deadzone ±2° to avoid drift when phone is flat
     const tilt = Math.abs(latestTiltAngle)>2 ? latestTiltAngle : 0;
-    cardVelocity += tilt * 0.22;       // tilt → force (tuned for CARD_STEP=48)
+    cardVelocity += tilt * 0.38;       // tilt → force
     cardVelocity *= 0.86;              // friction / damping
 
     currentX += cardVelocity;
