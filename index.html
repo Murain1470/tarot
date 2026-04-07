@@ -893,10 +893,7 @@ function updateHoloEffect(){
     el.style.background = `radial-gradient(ellipse 55% 38% at ${fx}% ${fy}%, rgba(255,255,255,.13) 0%, rgba(255,255,255,.04) 45%, transparent 72%)`;
   });
 
-  // Parallax: artwork vs background
-  document.querySelectorAll('.holo-art-layer').forEach(el=>{
-    el.style.transform = `translate(${holoGamma*-.75}px,${holoBeta*-.42}px)`;
-  });
+  // Parallax: background pattern only (artwork image stays fixed)
   document.querySelectorAll('.holo-bg-layer').forEach(el=>{
     el.style.transform = `translate(${holoGamma*.38}px,${holoBeta*.22}px)`;
   });
