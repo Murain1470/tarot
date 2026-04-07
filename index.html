@@ -32,8 +32,23 @@ body {
 #converge-overlay {
   position:fixed; inset:0; z-index:1; pointer-events:none;
   opacity:0;
-  background:radial-gradient(circle at 50% 55%, rgba(74,31,138,.55) 0%, rgba(30,10,80,.2) 40%, transparent 70%);
+  background:radial-gradient(circle at 50% 55%, rgba(50,10,100,.82) 0%, rgba(20,5,50,.55) 45%, rgba(6,3,15,.3) 75%, transparent 100%);
   transition:opacity .5s ease;
+}
+#energy-flash {
+  position:fixed; inset:0; z-index:50; pointer-events:none;
+  opacity:0; background:radial-gradient(circle at 50% 55%, rgba(255,240,120,.22) 0%, rgba(201,168,76,.08) 45%, transparent 75%);
+}
+@keyframes energyFlash {
+  0%  { opacity:0; transform:scale(.85); }
+  18% { opacity:1; transform:scale(1.04); }
+  55% { opacity:.6; transform:scale(1); }
+  100%{ opacity:0; transform:scale(1); }
+}
+/* Card-back holographic shimmer (S4) */
+.card-back-holo {
+  position:absolute; inset:0; border-radius:8px;
+  mix-blend-mode:color-dodge; pointer-events:none; z-index:8; opacity:.55;
 }
 
 /* ═══ SCREENS ═══ */
@@ -311,6 +326,7 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
 
 <canvas id="stars-canvas"></canvas>
 <div id="converge-overlay"></div>
+<div id="energy-flash"></div>
 <div class="toast" id="toast"></div>
 
 <!-- S1: ENTRY -->
@@ -498,8 +514,9 @@ const NEXT_LABEL = ['✦ 揭示現在之牌', '✦ 揭示未來之牌'];
 
 // ═══ STATE ═══
 let question='', selectedSlot=0, selectedCards=[null,null,null];
-let cards=[], currentX=0, targetX=0, focusedIndex=0, gammaRef=0, rafStarted=false;
-let rawGamma=0, rawBeta=0, holoGamma=0, holoBeta=0;
+let cards=[], currentX=0, focusedIndex=0, gammaRef=0, rafStarted=false;
+let cardVelocity=0, latestTiltAngle=0;           // velocity physics
+let rawGamma=0, rawBeta=0, holoGamma=0, holoBeta=0, backHoloGamma=0;
 let readingBuckets=null, revealedCount=0;
 const CARD_STEP = 120+16;
 const RING_CIRC = 2*Math.PI*70; // ≈ 439.8
@@ -598,7 +615,14 @@ function cancelPress(){
 function completePress(){
   pressStart=null; cancelAnimationFrame(pressRAF);
   pressZone.classList.remove('pressing');
-  setTimeout(()=>{ convergeOverlay.style.opacity='0'; }, 350);
+  // Energy flash burst
+  const flash=document.getElementById('energy-flash');
+  flash.style.animation='none';
+  flash.offsetWidth; // reflow
+  flash.style.animation='energyFlash .65s ease-out forwards';
+  // Screen briefly darkens then flashes
+  convergeOverlay.style.opacity='1';
+  setTimeout(()=>{ convergeOverlay.style.opacity='0'; }, 280);
   setTimeout(()=>{
     pressRingFill.style.strokeDashoffset=RING_CIRC;
     pressOrb.textContent='🔮';
@@ -606,7 +630,7 @@ function completePress(){
     initCardSelection();
     goTo('s-cards');
     if(!rafStarted){ rafStarted=true; renderLoop(); }
-  }, 550);
+  }, 580);
 }
 pressZone.addEventListener('pointerdown', startPress);
 pressZone.addEventListener('pointerup',   cancelPress);
@@ -615,7 +639,7 @@ pressZone.addEventListener('pointerleave', cancelPress);
 
 // ═══ S4: CARD SELECTION ═══
 function initCardSelection(){
-  selectedSlot=0; selectedCards=[null,null,null]; currentX=0; targetX=0; focusedIndex=0;
+  selectedSlot=0; selectedCards=[null,null,null]; currentX=0; cardVelocity=0; focusedIndex=0; latestTiltAngle=0;
   let deck=[...ALL_CARDS];
   for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
   cards=deck;
@@ -631,7 +655,7 @@ function buildCardStrip(){
     el.className='tarot-card idle-breathe'; el.style.animationDelay=`${i*.12}s`; el.dataset.index=i;
     el.innerHTML=`
       <div class="card-pos-label"></div>
-      <div class="card-face card-back"><div class="card-back-inner"><span class="card-back-symbol">✦</span></div></div>
+      <div class="card-face card-back"><div class="card-back-inner"><span class="card-back-symbol">✦</span></div><div class="card-back-holo"></div></div>
       <div class="card-face card-front">
         <div class="card-front-border"></div>
         <div class="card-number">${card.num}</div>
@@ -709,10 +733,9 @@ document.getElementById('calibrate-btn').addEventListener('click',()=>{
 function handleOrientation(e){
   rawGamma = e.gamma||0;
   rawBeta  = e.beta||0;
-  if(e.gamma===null || !document.getElementById('s-cards').classList.contains('active')) return;
-  const g=Math.max(-40,Math.min(40,e.gamma-gammaRef));
-  const maxOff=(cards.length-1)*CARD_STEP*.5;
-  targetX=-(g/40)*maxOff;
+  if(e.gamma===null) return;
+  // Store calibrated tilt for velocity physics (S4)
+  latestTiltAngle = Math.max(-45, Math.min(45, e.gamma-gammaRef));
 }
 let lastAcc={x:0,y:0,z:0}, shakeThrottle=false;
 function handleMotion(e){
@@ -725,11 +748,15 @@ function handleMotion(e){
   }
 }
 
-// Desktop mouse fallback for holo effect
+// Desktop mouse fallback — S4 tilt + S5 holo
 document.addEventListener('mousemove',e=>{
+  const mx=(e.clientX/window.innerWidth-.5);
+  if(document.getElementById('s-cards').classList.contains('active')){
+    latestTiltAngle = mx*38;   // ±19° equivalent
+  }
   if(document.getElementById('s-reading').classList.contains('active')){
-    rawGamma=(e.clientX/window.innerWidth-.5)*28;
-    rawBeta =(e.clientY/window.innerHeight-.5)*18;
+    rawGamma = mx*28;
+    rawBeta  = (e.clientY/window.innerHeight-.5)*18;
   }
 });
 
@@ -780,20 +807,77 @@ function updateHoloEffect(){
   });
 }
 
-// ═══ RENDER LOOP ═══
+// ═══ S4 CARD-BACK HOLO ═══
+function updateS4BackHolo(){
+  backHoloGamma += (rawGamma - backHoloGamma) * 0.06;
+  const angle  = backHoloGamma * 4.5 + 45;
+  const hue    = backHoloGamma * 11;
+  const grad   = `repeating-linear-gradient(${angle}deg,
+    hsla(${hue},100%,72%,0) 0%,
+    hsla(${40+hue},100%,72%,.22) 13%,
+    hsla(${120+hue},100%,72%,.22) 28%,
+    hsla(${200+hue},100%,72%,.20) 43%,
+    hsla(${270+hue},100%,72%,.22) 58%,
+    hsla(${330+hue},100%,72%,.18) 73%,
+    hsla(${360+hue},100%,72%,0) 100%)`;
+  document.querySelectorAll('.card-back-holo').forEach(el=>{ el.style.background=grad; });
+}
+
+// ═══ RENDER LOOP — velocity physics ═══
 function renderLoop(){
-  currentX+=(targetX-currentX)*.18;
-  if(document.getElementById('s-cards').classList.contains('active')){
-    const strip=document.getElementById('card-strip');
-    const glow =document.getElementById('glow-layer');
-    if(strip&&cards.length){
-      strip.style.transform=`translateX(${currentX}px)`;
-      glow.style.transform =`translateX(${currentX*1.4}px)`;
-      const nf=Math.round(-currentX/CARD_STEP+(cards.length-1)/2);
-      const cl=Math.max(0,Math.min(cards.length-1,nf));
-      if(cl!==focusedIndex) updateFocus(cl);
+  const inCards = document.getElementById('s-cards').classList.contains('active');
+
+  if(inCards && cards.length){
+    // Tilt angle drives velocity (acceleration model)
+    // Small deadzone ±2° to avoid drift when phone is flat
+    const tilt = Math.abs(latestTiltAngle)>2 ? latestTiltAngle : 0;
+    cardVelocity += tilt * 0.55;       // tilt → force
+    cardVelocity *= 0.86;              // friction / damping
+
+    currentX += cardVelocity;
+
+    // Soft wall at both ends
+    const halfSpan = (cards.length - 1) * CARD_STEP * 0.5 + CARD_STEP * 0.4;
+    if(currentX >  halfSpan){ currentX =  halfSpan; cardVelocity *= -0.25; }
+    if(currentX < -halfSpan){ currentX = -halfSpan; cardVelocity *= -0.25; }
+
+    // Continuous float position (not discrete index)
+    const centerFloat = -currentX / CARD_STEP + (cards.length - 1) / 2;
+    const newFocus    = Math.max(0, Math.min(cards.length-1, Math.round(centerFloat)));
+
+    // Soft snap toward nearest card when nearly still
+    if(Math.abs(cardVelocity) < 0.9 && Math.abs(tilt) < 3){
+      const snapX = -(newFocus - (cards.length-1)/2) * CARD_STEP;
+      currentX   += (snapX - currentX) * 0.07;
     }
+
+    const strip = document.getElementById('card-strip');
+    const glow  = document.getElementById('glow-layer');
+    strip.style.transform = `translateX(${currentX}px)`;
+    glow.style.transform  = `translateX(${currentX * 1.4}px)`;
+
+    // Update ALL card 3D transforms every frame from float position (no CSS transition)
+    const els = document.getElementById('card-strip').querySelectorAll('.tarot-card');
+    els.forEach((el, i) => {
+      const offset = i - centerFloat;           // continuous float
+      const dist   = Math.abs(offset);
+      const bri    = Math.max(0.42, 1 - dist * 0.2);
+      const slot   = selectedCards.findIndex(sc => sc && sc.deckIndex === i);
+      el.style.transition = 'filter .25s';      // only filter fades, transform is raw
+      if(slot >= 0){
+        el.style.transform = `translateY(-6px) rotateY(180deg)`;
+      } else {
+        el.style.transform = `rotateY(${offset*7}deg) translateZ(${-dist*15}px) translateY(${dist*dist*2.5}px)`;
+      }
+      el.style.filter = `brightness(${bri})`;
+      el.classList.toggle('is-focused', i === newFocus);
+    });
+    focusedIndex = newFocus;
+
+    // Card-back holo shimmer
+    updateS4BackHolo();
   }
+
   updateHoloEffect();
   requestAnimationFrame(renderLoop);
 }
