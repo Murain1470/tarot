@@ -518,7 +518,7 @@ let cards=[], currentX=0, focusedIndex=0, gammaRef=0, rafStarted=false;
 let cardVelocity=0, latestTiltAngle=0;           // velocity physics
 let rawGamma=0, rawBeta=0, holoGamma=0, holoBeta=0, backHoloGamma=0;
 let readingBuckets=null, revealedCount=0;
-const CARD_STEP = 120+16;
+const CARD_STEP = 48;
 const RING_CIRC = 2*Math.PI*70; // ≈ 439.8
 
 // ═══ STARS ═══
@@ -831,7 +831,7 @@ function renderLoop(){
     // Tilt angle drives velocity (acceleration model)
     // Small deadzone ±2° to avoid drift when phone is flat
     const tilt = Math.abs(latestTiltAngle)>2 ? latestTiltAngle : 0;
-    cardVelocity += tilt * 0.55;       // tilt → force
+    cardVelocity += tilt * 0.22;       // tilt → force (tuned for CARD_STEP=48)
     cardVelocity *= 0.86;              // friction / damping
 
     currentX += cardVelocity;
@@ -865,11 +865,17 @@ function renderLoop(){
       const slot   = selectedCards.findIndex(sc => sc && sc.deckIndex === i);
       el.style.transition = 'filter .25s';      // only filter fades, transform is raw
       if(slot >= 0){
-        el.style.transform = `translateY(-6px) rotateY(180deg)`;
+        el.style.transform = `translateY(-8px) rotateY(180deg) translateZ(20px)`;
       } else {
-        el.style.transform = `rotateY(${offset*7}deg) translateZ(${-dist*15}px) translateY(${dist*dist*2.5}px)`;
+        // pop-out: focused card surges forward and up; others recede and arc down
+        const pop  = Math.max(0, 1 - dist * 1.6); // 1 at center, 0 beyond ~0.6
+        const tz   = pop * 40 - dist * 10;         // forward pop vs background recede
+        const ty   = -pop * 12 + dist * dist * 2.2;// up pop vs downward arc
+        const rotY = offset * 4;                    // gentler rotation (cards overlap)
+        el.style.transform = `rotateY(${rotY}deg) translateZ(${tz}px) translateY(${ty}px)`;
       }
-      el.style.filter = `brightness(${bri})`;
+      el.style.filter  = `brightness(${bri})`;
+      el.style.zIndex  = Math.round(100 - dist * 8);  // focused card always on top
       el.classList.toggle('is-focused', i === newFocus);
     });
     focusedIndex = newFocus;
