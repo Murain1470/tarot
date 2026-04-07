@@ -29,6 +29,12 @@ body {
 }
 
 #stars-canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+#converge-overlay {
+  position:fixed; inset:0; z-index:1; pointer-events:none;
+  opacity:0;
+  background:radial-gradient(circle at 50% 55%, rgba(74,31,138,.55) 0%, rgba(30,10,80,.2) 40%, transparent 70%);
+  transition:opacity .5s ease;
+}
 
 /* ═══ SCREENS ═══ */
 .screen {
@@ -42,16 +48,11 @@ body {
 .screen.active { opacity:1; pointer-events:all; }
 
 /* ── S1: ENTRY ── */
-#s-entry {
-  background: radial-gradient(ellipse at center, #1a0f35 0%, #06030f 70%);
-  gap: 28px;
-}
+#s-entry { background: radial-gradient(ellipse at center, #1a0f35 0%, #06030f 70%); gap: 28px; }
 .sigil { width:110px; height:110px; animation: sigil-rot 20s linear infinite; flex-shrink:0; }
 @keyframes sigil-rot { to { transform:rotate(360deg); } }
-
 .brand { font-family:'Cinzel Decorative',serif; font-size:26px; color:var(--gold); letter-spacing:.1em; text-shadow:0 0 30px rgba(201,168,76,.6); text-align:center; }
 .brand-sub { font-size:11px; color:rgba(201,168,76,.45); letter-spacing:.35em; text-transform:uppercase; text-align:center; margin-top:4px; }
-
 .gold-btn {
   background: transparent; border: 1px solid var(--gold);
   color: var(--gold-light); font-family: 'Cinzel',serif;
@@ -61,14 +62,10 @@ body {
 .gold-btn:active { transform:scale(.97); box-shadow:0 0 18px rgba(201,168,76,.4); }
 
 /* ── S2: QUESTION ── */
-#s-question {
-  background: radial-gradient(ellipse at 50% 30%, #1a0f35 0%, #06030f 65%);
-  gap: 20px; justify-content: flex-start; padding-top: 72px;
-}
+#s-question { background: radial-gradient(ellipse at 50% 30%, #1a0f35 0%, #06030f 65%); gap: 20px; justify-content: flex-start; padding-top: 72px; }
 .q-label { font-family:'Cinzel',serif; font-size:11px; letter-spacing:.3em; color:var(--gold-dim); text-transform:uppercase; text-align:center; }
 .q-title { font-family:'Cinzel Decorative',serif; font-size:20px; color:var(--gold); text-align:center; line-height:1.5; text-shadow:0 0 20px rgba(201,168,76,.4); }
 .q-hint { font-size:12px; color:rgba(240,208,128,.4); text-align:center; line-height:1.8; letter-spacing:.05em; }
-
 textarea#question-input {
   width:100%; max-width:320px;
   background: rgba(26,15,53,.6); border:1px solid rgba(201,168,76,.25); border-radius:4px;
@@ -79,58 +76,71 @@ textarea#question-input {
 }
 textarea#question-input::placeholder { color:rgba(201,168,76,.25); }
 textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
-
 .q-examples { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100%; max-width:320px; }
-.q-example {
-  border:1px solid rgba(201,168,76,.2); padding:6px 14px;
-  font-size:11px; color:rgba(201,168,76,.55); cursor:pointer;
-  border-radius:2px; letter-spacing:.05em; transition:all .2s;
-}
+.q-example { border:1px solid rgba(201,168,76,.2); padding:6px 14px; font-size:11px; color:rgba(201,168,76,.55); cursor:pointer; border-radius:2px; letter-spacing:.05em; transition:all .2s; }
 .q-example:active { border-color:var(--gold); color:var(--gold); }
 
-/* ── S3: SHUFFLE ── */
-#s-shuffle { background:var(--deep); gap:24px; }
-.shuffle-orb {
-  width:120px; height:120px; border-radius:50%;
-  background: radial-gradient(circle,rgba(74,31,138,.8) 0%,rgba(6,3,15,0) 70%);
-  border:1px solid rgba(201,168,76,.2);
-  display:flex; align-items:center; justify-content:center; font-size:48px;
-  animation: orb-pulse 2s ease-in-out infinite;
-}
-@keyframes orb-pulse { 0%,100%{box-shadow:0 0 20px rgba(74,31,138,.4);transform:scale(1)} 50%{box-shadow:0 0 50px rgba(74,31,138,.8);transform:scale(1.05)} }
+/* ── S3: LONG PRESS RITUAL ── */
+#s-shuffle { background:var(--deep); gap:18px; }
 .shuffle-title { font-family:'Cinzel Decorative',serif; font-size:18px; color:var(--gold); letter-spacing:.1em; text-align:center; }
 .shuffle-q-echo { font-size:13px; color:rgba(240,208,128,.6); text-align:center; line-height:1.8; letter-spacing:.05em; max-width:260px; font-style:italic; }
-.shuffle-hint { font-size:11px; color:rgba(201,168,76,.35); letter-spacing:.15em; text-align:center; }
+.shuffle-hint { font-size:11px; color:rgba(201,168,76,.32); letter-spacing:.12em; text-align:center; line-height:1.9; }
+
+.press-zone {
+  width:160px; height:160px; position:relative;
+  cursor:pointer; touch-action:none;
+  -webkit-user-select:none; user-select:none;
+  flex-shrink:0;
+}
+.press-ring-svg { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); pointer-events:none; }
+.press-ring-track { fill:none; stroke:rgba(201,168,76,.1); stroke-width:1.5; }
+.press-ring-fill {
+  fill:none; stroke:var(--gold); stroke-width:2.5;
+  stroke-dasharray:440; stroke-dashoffset:440;
+  stroke-linecap:round;
+  filter:drop-shadow(0 0 5px rgba(201,168,76,.9));
+  transition:stroke-dashoffset .05s linear;
+}
+.press-orb-inner {
+  position:absolute; inset:14px; border-radius:50%;
+  background:radial-gradient(circle, rgba(74,31,138,.88) 0%, rgba(6,3,15,0) 75%);
+  border:1px solid rgba(201,168,76,.14);
+  display:flex; align-items:center; justify-content:center;
+  font-size:52px;
+  transition:box-shadow .4s ease, transform .4s ease;
+}
+.press-zone.pressing .press-orb-inner {
+  transform:scale(1.08);
+  box-shadow:0 0 55px rgba(74,31,138,.95), 0 0 110px rgba(74,31,138,.35);
+}
+.press-label {
+  font-family:'Cinzel',serif; font-size:10px; letter-spacing:.22em;
+  color:rgba(201,168,76,.32); text-align:center;
+  transition:color .4s, letter-spacing .4s;
+}
+.press-zone.pressing + .press-label { color:rgba(201,168,76,.8); letter-spacing:.3em; }
 
 /* ── S4: CARD SELECTION ── */
-#s-cards {
-  background:var(--deep);
-  justify-content:flex-start; padding:0; gap:0;
-}
+#s-cards { background:var(--deep); justify-content:flex-start; padding:0; gap:0; }
 .cards-header { padding:22px 24px 10px; text-align:center; flex-shrink:0; }
 .cards-title { font-family:'Cinzel Decorative',serif; font-size:16px; color:var(--gold); letter-spacing:.12em; text-shadow:0 0 16px rgba(201,168,76,.4); }
 .cards-q-echo { font-size:11px; color:rgba(240,208,128,.4); letter-spacing:.05em; margin-top:5px; max-width:280px; margin-inline:auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .header-line { width:50px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:8px auto 0; }
-
-.tilt-hint { text-align:center; font-size:11px; color:rgba(240,208,128,.35); letter-spacing:.1em; padding:6px 24px; flex-shrink:0; transition:opacity .5s; }
-
-.scene { flex:1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; min-height:0; }
+.tilt-hint { text-align:center; font-size:11px; color:rgba(240,208,128,.32); letter-spacing:.1em; padding:6px 24px; flex-shrink:0; }
+.scene { flex:1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; min-height:0; perspective:900px; }
 .glow-layer { position:absolute; inset:0; pointer-events:none; z-index:0; }
 .ambient-glow { position:absolute; border-radius:50%; filter:blur(60px); opacity:.1; }
 .glow-1 { width:180px; height:180px; background:var(--purple-glow); top:15%; left:5%; }
 .glow-2 { width:140px; height:140px; background:#1f5a99; bottom:20%; right:5%; }
-
 .card-strip { display:flex; align-items:center; gap:var(--gap); position:relative; z-index:1; transform-style:preserve-3d; will-change:transform; padding:30px 50px; }
 
 /* ── CARD ── */
 .tarot-card { width:var(--card-w); height:var(--card-h); flex-shrink:0; position:relative; transform-style:preserve-3d; cursor:pointer; border-radius:8px; }
 .tarot-card.is-flipping { transition:transform .75s cubic-bezier(.4,0,.2,1) !important; }
-
 .card-face { position:absolute; inset:0; border-radius:8px; backface-visibility:hidden; -webkit-backface-visibility:hidden; overflow:hidden; }
 .card-back { background:var(--purple-mid); border:1px solid rgba(201,168,76,.3); display:flex; align-items:center; justify-content:center; }
 .card-back-inner { width:88%; height:88%; border:1px solid rgba(201,168,76,.18); border-radius:4px; display:flex; align-items:center; justify-content:center; background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(201,168,76,.04) 8px,rgba(201,168,76,.04) 9px); }
 .card-back-symbol { font-size:30px; opacity:.4; }
-
 .card-front { transform:rotateY(180deg); background:linear-gradient(160deg,#1c1030 0%,#0a061a 100%); border:1px solid rgba(201,168,76,.45); display:flex; flex-direction:column; align-items:center; padding:8px 6px; }
 .card-front-border { position:absolute; inset:5px; border:1px solid rgba(201,168,76,.18); border-radius:4px; pointer-events:none; }
 .card-number { font-family:'Cinzel',serif; font-size:8px; letter-spacing:.3em; color:var(--gold-dim); margin-bottom:3px; }
@@ -138,18 +148,14 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
 .card-artwork-glow { position:absolute; inset:0; background:radial-gradient(ellipse,rgba(201,168,76,.1) 0%,transparent 70%); }
 .card-name { font-family:'Cinzel',serif; font-size:8px; letter-spacing:.18em; color:var(--gold); text-align:center; margin-top:4px; line-height:1.4; }
 .card-name-zh { font-size:8px; color:rgba(201,168,76,.55); margin-top:2px; }
-
 .card-pos-label { position:absolute; top:-26px; left:50%; transform:translateX(-50%); font-family:'Cinzel',serif; font-size:8px; letter-spacing:.2em; color:rgba(201,168,76,.75); white-space:nowrap; opacity:0; transition:opacity .4s; pointer-events:none; }
-
 @keyframes breathe { 0%,100%{opacity:.85} 50%{opacity:1} }
 .idle-breathe { animation:breathe 3s ease-in-out infinite; }
-
 .focus-ring { position:absolute; inset:-4px; border:1px solid var(--gold); border-radius:10px; opacity:0; pointer-events:none; animation:focus-pulse 2s ease-in-out infinite; }
 @keyframes focus-pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
 .tarot-card.is-focused .focus-ring { opacity:1; }
 .tarot-card.is-focused .card-pos-label { opacity:1; }
 
-/* Slot indicator */
 .slot-indicator { display:flex; gap:16px; justify-content:center; padding:6px 0; flex-shrink:0; }
 .slot-pip { display:flex; flex-direction:column; align-items:center; gap:4px; }
 .slot-pip-dot { width:6px; height:6px; border-radius:50%; background:rgba(201,168,76,.15); transition:all .3s; }
@@ -164,33 +170,127 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
 
 /* ── S5: READING ── */
 #s-reading { background:var(--deep); justify-content:flex-start; padding:0; overflow:hidden; }
-.reading-scroll { width:100%; height:100%; overflow-y:auto; padding:36px 28px 60px; -webkit-overflow-scrolling:touch; }
-.reading-header { text-align:center; margin-bottom:20px; }
+.reading-scroll { width:100%; height:100%; overflow-y:auto; padding:36px 24px 60px; -webkit-overflow-scrolling:touch; }
+.reading-header { text-align:center; margin-bottom:16px; }
 .reading-title { font-family:'Cinzel Decorative',serif; font-size:17px; color:var(--gold); letter-spacing:.12em; text-shadow:0 0 20px rgba(201,168,76,.4); }
 .reading-question { font-size:12px; color:rgba(240,208,128,.5); margin-top:8px; letter-spacing:.05em; font-style:italic; line-height:1.7; }
 
-.spread-row { display:flex; gap:10px; justify-content:center; margin:18px 0; }
-.spread-card-mini { flex:1; max-width:88px; background:linear-gradient(160deg,#1c1030,#0a061a); border:1px solid rgba(201,168,76,.3); border-radius:6px; padding:10px 6px; display:flex; flex-direction:column; align-items:center; gap:4px; }
-.spread-pos { font-family:'Cinzel',serif; font-size:7px; letter-spacing:.2em; color:var(--gold-dim); }
-.spread-emoji { font-size:26px; }
-.spread-name { font-family:'Cinzel',serif; font-size:7px; color:var(--gold); letter-spacing:.1em; text-align:center; line-height:1.4; }
-.spread-name-zh { font-size:7px; color:rgba(201,168,76,.5); }
+/* Holographic spread */
+.holo-spread { display:flex; justify-content:center; gap:14px; margin:8px 0 16px; perspective:700px; }
+.holo-col { display:flex; flex-direction:column; align-items:center; }
 
-.reading-divider { height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,.3),transparent); margin:18px 0; }
+/* Holo card */
+.holo-card-wrap {
+  width:84px; height:140px;
+  position:relative; transform-style:preserve-3d;
+  cursor:pointer; flex-shrink:0;
+  transition:opacity .4s;
+}
+.holo-card-wrap.locked { opacity:.38; cursor:not-allowed; pointer-events:none; }
 
-.reading-section { margin-bottom:24px; }
+.holo-inner {
+  width:100%; height:100%;
+  position:relative; transform-style:preserve-3d;
+  transition:transform .88s cubic-bezier(.4,0,.2,1);
+  border-radius:8px;
+}
+.holo-inner.flipped { transform:rotateY(180deg); }
+
+.holo-back, .holo-face {
+  position:absolute; inset:0; border-radius:8px;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden; overflow:hidden;
+}
+.holo-back {
+  background:var(--purple-mid); border:1px solid rgba(201,168,76,.28);
+  display:flex; align-items:center; justify-content:center;
+}
+.holo-back-inner {
+  width:86%; height:86%;
+  border:1px solid rgba(201,168,76,.14); border-radius:4px;
+  display:flex; align-items:center; justify-content:center;
+  background:repeating-linear-gradient(45deg,transparent,transparent 7px,rgba(201,168,76,.04) 7px,rgba(201,168,76,.04) 8px);
+  font-size:20px; color:rgba(201,168,76,.28);
+}
+.holo-face {
+  transform:rotateY(180deg);
+  background:linear-gradient(160deg,#1c1030 0%,#0a061a 100%);
+  border:1px solid rgba(201,168,76,.5);
+  display:flex; flex-direction:column; align-items:center;
+  padding:6px 5px; overflow:hidden;
+}
+
+/* Parallax layers inside holo-face */
+.holo-bg-layer {
+  position:absolute; inset:0; border-radius:8px;
+  background:repeating-linear-gradient(45deg,transparent,transparent 7px,rgba(201,168,76,.04) 7px,rgba(201,168,76,.04) 8px);
+  will-change:transform; pointer-events:none; z-index:0;
+}
+.holo-face-border { position:absolute; inset:4px; border:1px solid rgba(201,168,76,.18); border-radius:5px; pointer-events:none; z-index:3; }
+.holo-card-num { font-family:'Cinzel',serif; font-size:7px; letter-spacing:.25em; color:var(--gold-dim); margin-bottom:2px; position:relative; z-index:2; }
+.holo-art-layer {
+  width:100%; flex:1;
+  display:flex; align-items:center; justify-content:center;
+  position:relative; z-index:2; font-size:34px;
+  will-change:transform;
+}
+.holo-art-glow { position:absolute; inset:0; background:radial-gradient(ellipse,rgba(201,168,76,.13) 0%,transparent 70%); pointer-events:none; }
+.holo-card-name { font-family:'Cinzel',serif; font-size:6.5px; letter-spacing:.14em; color:var(--gold); text-align:center; line-height:1.4; position:relative; z-index:2; }
+.holo-card-zh { font-size:6.5px; color:rgba(201,168,76,.5); margin-top:2px; position:relative; z-index:2; }
+
+/* Holographic shimmer layers — updated via JS */
+.holo-shimmer {
+  position:absolute; inset:0; border-radius:8px;
+  mix-blend-mode:color-dodge; pointer-events:none; z-index:5;
+  opacity:.65;
+}
+.holo-foil {
+  position:absolute; inset:0; border-radius:8px;
+  mix-blend-mode:screen; pointer-events:none; z-index:6;
+}
+.holo-sparkle {
+  position:absolute; inset:0; border-radius:8px;
+  mix-blend-mode:screen; pointer-events:none; z-index:7;
+  opacity:0;
+}
+
+.holo-pos-label {
+  font-family:'Cinzel',serif; font-size:8px; letter-spacing:.2em;
+  color:rgba(201,168,76,.38); text-align:center;
+  margin-top:7px; height:13px;
+  transition:color .4s;
+}
+.holo-pos-label.revealed { color:rgba(201,168,76,.8); }
+
+.holo-tap-hint {
+  position:absolute; bottom:-2px; left:50%; transform:translateX(-50%);
+  font-size:8px; color:rgba(201,168,76,.5); letter-spacing:.1em;
+  white-space:nowrap; pointer-events:none;
+  animation:breathe 2s ease-in-out infinite;
+}
+
+/* Reading sections */
+.reading-divider { height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,.3),transparent); margin:16px 0; }
+.reading-section { margin-bottom:20px; }
 .reading-section-title { font-family:'Cinzel',serif; font-size:10px; letter-spacing:.3em; color:var(--gold-dim); text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
 .reading-section-title::before,.reading-section-title::after { content:''; flex:1; height:1px; background:rgba(201,168,76,.15); }
-
-.reading-poetic { font-style:italic; color:rgba(240,208,128,.75); line-height:2.2; font-size:14px; letter-spacing:.06em; border-left:2px solid rgba(201,168,76,.25); padding-left:16px; }
 .reading-practical { color:rgba(240,208,128,.85); line-height:2; font-size:13px; letter-spacing:.04em; white-space:pre-wrap; }
-
 .typing-cursor { display:inline-block; width:2px; height:1em; background:var(--gold); margin-left:2px; vertical-align:middle; animation:blink .8s step-end infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-.reading-loading { display:flex; flex-direction:column; align-items:center; gap:16px; padding:40px 0; }
-.loading-orb { width:60px; height:60px; border-radius:50%; border:1px solid rgba(201,168,76,.3); display:flex; align-items:center; justify-content:center; font-size:28px; animation:orb-pulse 1.5s ease-in-out infinite; }
-.loading-text { font-size:12px; color:rgba(201,168,76,.5); letter-spacing:.15em; }
+.reveal-next-btn {
+  display:none; width:100%;
+  background:transparent; border:1px solid rgba(201,168,76,.28);
+  color:rgba(201,168,76,.65); font-family:'Cinzel',serif;
+  font-size:11px; letter-spacing:.2em; padding:12px;
+  cursor:pointer; transition:all .3s; margin-top:8px; border-radius:2px;
+}
+.reveal-next-btn.visible { display:block; }
+.reveal-next-btn:active { border-color:var(--gold); color:var(--gold); }
+
+.reading-loading { display:flex; flex-direction:column; align-items:center; gap:16px; padding:32px 0; }
+.loading-orb { width:52px; height:52px; border-radius:50%; border:1px solid rgba(201,168,76,.3); display:flex; align-items:center; justify-content:center; font-size:24px; animation:orb-pulse 1.5s ease-in-out infinite; }
+@keyframes orb-pulse { 0%,100%{box-shadow:0 0 20px rgba(74,31,138,.4);transform:scale(1)} 50%{box-shadow:0 0 50px rgba(74,31,138,.8);transform:scale(1.05)} }
+.loading-text { font-size:11px; color:rgba(201,168,76,.45); letter-spacing:.15em; }
 
 .reading-restart-btn { margin-top:32px; width:100%; background:transparent; border:1px solid rgba(201,168,76,.22); color:rgba(201,168,76,.55); font-family:'Cinzel',serif; font-size:11px; letter-spacing:.2em; padding:14px; cursor:pointer; transition:all .3s; }
 .reading-restart-btn:active { border-color:var(--gold); color:var(--gold); }
@@ -210,6 +310,7 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
 <body>
 
 <canvas id="stars-canvas"></canvas>
+<div id="converge-overlay"></div>
 <div class="toast" id="toast"></div>
 
 <!-- S1: ENTRY -->
@@ -250,13 +351,19 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
   <button class="gold-btn" id="question-submit-btn" style="max-width:240px;">繼續 · 進行洗牌</button>
 </div>
 
-<!-- S3: SHUFFLE -->
+<!-- S3: LONG PRESS RITUAL -->
 <div class="screen" id="s-shuffle">
-  <div class="shuffle-orb">🌀</div>
-  <div class="shuffle-title">靜心 · 洗牌儀式</div>
+  <div class="shuffle-title">靜心 · 注入意圖</div>
   <div class="shuffle-q-echo" id="shuffle-q-echo"></div>
-  <p class="shuffle-hint">專注於你的問題<br>感受牌與你之間的連結</p>
-  <button class="gold-btn" id="shuffle-done-btn" style="max-width:260px;">✦ 牌已洗好，開始選牌</button>
+  <p class="shuffle-hint">將問題凝聚在指尖<br>長按符文，注入你的能量</p>
+  <div class="press-zone" id="press-zone">
+    <svg class="press-ring-svg" viewBox="0 0 160 160">
+      <circle class="press-ring-track" cx="80" cy="80" r="70"/>
+      <circle class="press-ring-fill" id="press-ring-fill" cx="80" cy="80" r="70"/>
+    </svg>
+    <div class="press-orb-inner" id="press-orb">🔮</div>
+  </div>
+  <div class="press-label" id="press-label">長按三秒 · 注入能量</div>
 </div>
 
 <!-- S4: CARD SELECTION -->
@@ -267,7 +374,6 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
     <div class="header-line"></div>
   </div>
   <div class="tilt-hint">傾斜手機瀏覽 · 點擊「選取此牌」</div>
-
   <div class="scene" id="scene">
     <div class="glow-layer" id="glow-layer">
       <div class="ambient-glow glow-1"></div>
@@ -275,13 +381,11 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
     </div>
     <div class="card-strip" id="card-strip"></div>
   </div>
-
   <div class="slot-indicator" id="slot-indicator">
     <div class="slot-pip" data-slot="0"><div class="slot-pip-dot"></div><div class="slot-pip-label">過去</div></div>
     <div class="slot-pip" data-slot="1"><div class="slot-pip-dot"></div><div class="slot-pip-label">現在</div></div>
     <div class="slot-pip" data-slot="2"><div class="slot-pip-dot"></div><div class="slot-pip-label">未來</div></div>
   </div>
-
   <div class="cards-footer">
     <button class="footer-btn" id="calibrate-btn">校準</button>
     <button class="footer-btn primary" id="select-card-btn">✦ 選取此牌</button>
@@ -296,129 +400,135 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
       <div class="reading-title">✦ 牌陣解讀 ✦</div>
       <div class="reading-question" id="reading-q"></div>
     </div>
-    <div class="spread-row" id="spread-row"></div>
-    <div class="reading-divider"></div>
+    <div class="holo-spread" id="holo-spread"></div>
     <div id="reading-content"></div>
-    <button class="reading-restart-btn" id="restart-btn">↺ 重新占卜</button>
+    <button class="reading-restart-btn" id="restart-btn" style="display:none;">↺ 重新占卜</button>
   </div>
 </div>
 
 <script>
 // ═══ GEMINI KEY ═══
-// Set window.GEMINI_API_KEY = 'your-key' before this script,
-// or it will ask in the reading screen.
 let GEMINI_KEY = window.GEMINI_API_KEY || '';
 
-// ═══ TAROT DATA — 78 張完整牌庫 ═══
+// ═══ TAROT DATA — 78 cards ═══
 const ALL_CARDS = [
-  // ── 大阿爾克那 Major Arcana (0-21) ──
-  {id:0, suit:'major',emoji:'🌟',num:'0',   name:'The Fool',         nameZh:'愚者',    keywords:['新生','冒險','無限可能'],   meaning:'靈魂踏上旅程的第一步，眼神仰望，毫不畏懼。'},
-  {id:1, suit:'major',emoji:'🔮',num:'I',   name:'The Magician',     nameZh:'魔術師',  keywords:['意志','創造','資源整合'],   meaning:'你擁有將夢想化為現實的力量，所有工具就在手邊。'},
-  {id:2, suit:'major',emoji:'🌙',num:'II',  name:'High Priestess',   nameZh:'女祭司',  keywords:['直覺','神秘','潛意識'],    meaning:'答案早已藏在靈魂最深處的靜默之中。'},
-  {id:3, suit:'major',emoji:'👑',num:'III', name:'The Empress',      nameZh:'女皇',    keywords:['豐饒','母性','創造力'],    meaning:'大地之母的能量湧現，滋養與豐收的季節到來。'},
-  {id:4, suit:'major',emoji:'⚡',num:'IV',  name:'The Emperor',      nameZh:'皇帝',    keywords:['權威','秩序','穩定'],      meaning:'建立結構，以理性與意志掌舵混亂。'},
-  {id:5, suit:'major',emoji:'🙏',num:'V',   name:'The Hierophant',   nameZh:'教皇',    keywords:['傳統','智慧','信仰'],      meaning:'在傳承的智慧中尋找你的真理。'},
-  {id:6, suit:'major',emoji:'💞',num:'VI',  name:'The Lovers',       nameZh:'戀人',    keywords:['選擇','連結','價值觀'],    meaning:'面臨的不只是感情抉擇，而是靈魂深處的選擇。'},
-  {id:7, suit:'major',emoji:'🏆',num:'VII', name:'The Chariot',      nameZh:'戰車',    keywords:['意志力','勝利','前進'],    meaning:'駕馭相反的力量，以意志衝破一切阻礙。'},
-  {id:8, suit:'major',emoji:'🦁',num:'VIII',name:'Strength',         nameZh:'力量',    keywords:['內在力量','勇氣','耐心'],  meaning:'真正的力量來自溫柔的掌控，而非蠻力。'},
-  {id:9, suit:'major',emoji:'🕯️',num:'IX',  name:'The Hermit',       nameZh:'隱者',    keywords:['孤獨','內省','尋真'],      meaning:'在獨處的燈火中，找到照亮他人的智慧。'},
-  {id:10,suit:'major',emoji:'☯️',num:'X',   name:'Wheel of Fortune', nameZh:'命運之輪',keywords:['命運','循環','轉機'],      meaning:'輪子永恆轉動，此刻的困境終將成為轉機。'},
-  {id:11,suit:'major',emoji:'⚖️',num:'XI',  name:'Justice',          nameZh:'正義',    keywords:['公平','因果','真相'],      meaning:'宇宙自有其法則，誠實面對因果。'},
-  {id:12,suit:'major',emoji:'🌊',num:'XII', name:'The Hanged Man',   nameZh:'倒吊人',  keywords:['暫停','犧牲','新視角'],    meaning:'主動放手，才能看見顛倒世界的全新真相。'},
-  {id:13,suit:'major',emoji:'🦋',num:'XIII',name:'Death',            nameZh:'死神',    keywords:['轉化','結束','重生'],      meaning:'並非終結，而是蛻變——舊我謝幕，新生的序章。'},
-  {id:14,suit:'major',emoji:'🌈',num:'XIV', name:'Temperance',       nameZh:'節制',    keywords:['平衡','融合','耐心'],      meaning:'在流動中尋求平衡，急流與靜水之間自有道路。'},
-  {id:15,suit:'major',emoji:'🔗',num:'XV',  name:'The Devil',        nameZh:'惡魔',    keywords:['束縛','執念','陰影'],      meaning:'你以為的枷鎖，其實從未真正鎖住你。'},
-  {id:16,suit:'major',emoji:'🌩️',num:'XVI', name:'The Tower',        nameZh:'塔',      keywords:['震撼','崩解','清醒'],      meaning:'虛假的高塔必然倒塌，廢墟才是重建的起點。'},
-  {id:17,suit:'major',emoji:'⭐',num:'XVII',name:'The Star',         nameZh:'星星',    keywords:['希望','療癒','信念'],      meaning:'黑夜最深處，那顆恆星從未熄滅。'},
-  {id:18,suit:'major',emoji:'🌕',num:'XVIII',name:'The Moon',        nameZh:'月亮',    keywords:['幻象','潛意識','迷惘'],    meaning:'月光之下，幻影與真實交織——信任你的直覺。'},
-  {id:19,suit:'major',emoji:'☀️',num:'XIX', name:'The Sun',          nameZh:'太陽',    keywords:['喜悅','成功','光明'],      meaning:'光明驅散一切陰影，喜悅如孩童般自在奔跑。'},
-  {id:20,suit:'major',emoji:'📯',num:'XX',  name:'Judgement',        nameZh:'審判',    keywords:['覺醒','召喚','重生'],      meaning:'號角響起，你被召喚去成為更高版本的自己。'},
-  {id:21,suit:'major',emoji:'🌍',num:'XXI', name:'The World',        nameZh:'世界',    keywords:['完成','整合','圓滿'],      meaning:'一個循環圓滿完成，宇宙向你致意。'},
-
-  // ── 權杖 Wands（火元素：行動、熱情、創造、事業）──
-  {id:22,suit:'wands',emoji:'🔥',num:'Ace', name:'Ace of Wands',     nameZh:'權杖王牌',keywords:['新開始','靈感爆發','行動衝動'],  meaning:'一股強烈的創造衝動正在萌發，是啟動新計劃的最佳時機。'},
-  {id:23,suit:'wands',emoji:'🕯️',num:'2',   name:'Two of Wands',     nameZh:'權杖二',  keywords:['規劃','遠見','待機而動'],        meaning:'你已站在高處眺望遠方，現在是謀定而後動的時刻。'},
-  {id:24,suit:'wands',emoji:'🌄',num:'3',   name:'Three of Wands',   nameZh:'權杖三',  keywords:['擴展','等待成果','前瞻'],        meaning:'計劃已經啟動，船已出港，等待第一批成果回航。'},
-  {id:25,suit:'wands',emoji:'🎪',num:'4',   name:'Four of Wands',    nameZh:'權杖四',  keywords:['慶祝','里程碑','穩定基礎'],      meaning:'一個階段圓滿完成，值得停下來慶祝這份成就。'},
-  {id:26,suit:'wands',emoji:'⚔️',num:'5',   name:'Five of Wands',    nameZh:'權杖五',  keywords:['競爭','衝突','多方角力'],        meaning:'四面而來的競爭與意見分歧，需要在混亂中找到自己的立場。'},
-  {id:27,suit:'wands',emoji:'🏅',num:'6',   name:'Six of Wands',     nameZh:'權杖六',  keywords:['勝利','公眾認可','自信'],        meaning:'努力獲得了眾人的肯定，勝利凱旋的時刻到來。'},
-  {id:28,suit:'wands',emoji:'🛡️',num:'7',   name:'Seven of Wands',   nameZh:'權杖七',  keywords:['防守','堅守立場','挑戰'],        meaning:'站在高處捍衛自己的成果，不輕易讓步才能守住優勢。'},
-  {id:29,suit:'wands',emoji:'💨',num:'8',   name:'Eight of Wands',   nameZh:'權杖八',  keywords:['快速進展','行動力','訊息'],      meaning:'事情正在快速推進，保持靈活應變，抓住這股順風。'},
-  {id:30,suit:'wands',emoji:'😓',num:'9',   name:'Nine of Wands',    nameZh:'權杖九',  keywords:['韌性','疲憊','最後關卡'],        meaning:'你已走了很長的路，雖然疲憊，但終點就在眼前，再撐一下。'},
-  {id:31,suit:'wands',emoji:'😩',num:'10',  name:'Ten of Wands',     nameZh:'權杖十',  keywords:['重擔','過度承擔','壓力'],        meaning:'你承擔了太多，學會分工或放下一些責任是當務之急。'},
-  {id:32,suit:'wands',emoji:'🧒',num:'Page',name:'Page of Wands',    nameZh:'權杖侍從',keywords:['探索','熱忱','新想法'],          meaning:'帶著孩子般的熱情去探索新領域，不怕失敗的勇氣是你的武器。'},
-  {id:33,suit:'wands',emoji:'🏇',num:'Knt', name:'Knight of Wands',  nameZh:'權杖騎士',keywords:['衝動','冒險','全力以赴'],        meaning:'充滿行動力但可能過於衝動，熱情是優點，但需要方向感。'},
-  {id:34,suit:'wands',emoji:'👸',num:'Q',   name:'Queen of Wands',   nameZh:'權杖皇后',keywords:['自信','魅力','獨立'],            meaning:'充滿自信與魅力，以溫暖的領導力感染周圍的人。'},
-  {id:35,suit:'wands',emoji:'🤴',num:'K',   name:'King of Wands',    nameZh:'權杖國王',keywords:['領導','遠見','創業精神'],        meaning:'以成熟的眼光和強大的意志力帶領眾人，是天生的領導者。'},
-
-  // ── 聖杯 Cups（水元素：情感、關係、直覺、夢想）──
-  {id:36,suit:'cups',emoji:'💧',num:'Ace', name:'Ace of Cups',      nameZh:'聖杯王牌',keywords:['新感情','情感流動','愛的開始'], meaning:'心扉敞開，新的愛與連結正在向你湧來。'},
-  {id:37,suit:'cups',emoji:'🤝',num:'2',   name:'Two of Cups',      nameZh:'聖杯二',  keywords:['吸引','夥伴關係','共鳴'],       meaning:'兩個靈魂相遇，彼此吸引，建立深刻的情感連結。'},
-  {id:38,suit:'cups',emoji:'🥂',num:'3',   name:'Three of Cups',    nameZh:'聖杯三',  keywords:['慶祝','友誼','社群喜悅'],       meaning:'與摯友共同慶祝，在愛與歡笑中感受生命的豐盛。'},
-  {id:39,suit:'cups',emoji:'😔',num:'4',   name:'Four of Cups',     nameZh:'聖杯四',  keywords:['冷漠','無聊','錯過機會'],       meaning:'沉浸在過去的不滿中，可能正在錯過眼前伸出的新機會。'},
-  {id:40,suit:'cups',emoji:'😢',num:'5',   name:'Five of Cups',     nameZh:'聖杯五',  keywords:['失落','悲傷','遺憾'],           meaning:'為已失去的而悲傷是正常的，但別忘了身後仍有杯子未傾覆。'},
-  {id:41,suit:'cups',emoji:'🏡',num:'6',   name:'Six of Cups',      nameZh:'聖杯六',  keywords:['懷舊','童年','純真'],           meaning:'過去的美好記憶帶來溫暖，但也要記得活在當下。'},
-  {id:42,suit:'cups',emoji:'🌫️',num:'7',   name:'Seven of Cups',    nameZh:'聖杯七',  keywords:['幻想','選擇太多','迷失'],       meaning:'面對太多誘人的可能性，容易在幻想中迷失，需要腳踏實地。'},
-  {id:43,suit:'cups',emoji:'🚶',num:'8',   name:'Eight of Cups',    nameZh:'聖杯八',  keywords:['離開','尋求更多','轉身'],       meaning:'即使眼前已有所成，內心仍渴望更有意義的事物，勇敢轉身。'},
-  {id:44,suit:'cups',emoji:'😊',num:'9',   name:'Nine of Cups',     nameZh:'聖杯九',  keywords:['滿足','願望成真','享樂'],       meaning:'願望之牌——你所渴望的正在實現，享受這份得來不易的滿足。'},
-  {id:45,suit:'cups',emoji:'👨‍👩‍👧‍👦',num:'10', name:'Ten of Cups',     nameZh:'聖杯十',  keywords:['家庭幸福','圓滿','長久'],       meaning:'情感上最圓滿的狀態，家庭與愛情都達到了和諧的頂點。'},
-  {id:46,suit:'cups',emoji:'🧒',num:'Page',name:'Page of Cups',     nameZh:'聖杯侍從',keywords:['創意','浪漫','情感訊息'],       meaning:'帶著夢想與好奇心接近情感，一個意想不到的好消息可能到來。'},
-  {id:47,suit:'cups',emoji:'🐟',num:'Knt', name:'Knight of Cups',   nameZh:'聖杯騎士',keywords:['浪漫','追求','理想主義'],       meaning:'騎著白馬追求夢想的人，充滿詩意但需要落實行動。'},
-  {id:48,suit:'cups',emoji:'👸',num:'Q',   name:'Queen of Cups',    nameZh:'聖杯皇后',keywords:['同理心','直覺','情感智慧'],     meaning:'以深刻的同理心理解他人，直覺極為準確，是療癒者的原型。'},
-  {id:49,suit:'cups',emoji:'🤴',num:'K',   name:'King of Cups',     nameZh:'聖杯國王',keywords:['情感成熟','平衡','智慧'],       meaning:'能夠在感性與理性之間保持平衡，以成熟的情感智慧引導他人。'},
-
-  // ── 寶劍 Swords（風元素：思維、衝突、真相、溝通）──
-  {id:50,suit:'swords',emoji:'💡',num:'Ace', name:'Ace of Swords',   nameZh:'寶劍王牌',keywords:['真相','突破','清晰思維'],       meaning:'一道清明的光劃破迷霧，真相浮現，做出清晰決斷的時刻。'},
-  {id:51,suit:'swords',emoji:'🤐',num:'2',   name:'Two of Swords',   nameZh:'寶劍二',  keywords:['僵局','迴避','難以抉擇'],       meaning:'蒙著眼睛拒絕看清真相，是時候摘下眼罩，直面那個困難的選擇。'},
-  {id:52,suit:'swords',emoji:'💔',num:'3',   name:'Three of Swords', nameZh:'寶劍三',  keywords:['心碎','悲傷','失望'],           meaning:'心被刺穿的痛苦是真實的，允許自己哀傷，然後讓療癒開始。'},
-  {id:53,suit:'swords',emoji:'😴',num:'4',   name:'Four of Swords',  nameZh:'寶劍四',  keywords:['休養','冥想','暫時撤退'],       meaning:'強迫性地休息並非軟弱，而是為下一場戰役積蓄力量。'},
-  {id:54,suit:'swords',emoji:'😈',num:'5',   name:'Five of Swords',  nameZh:'寶劍五',  keywords:['衝突','失敗','不道德勝利'],     meaning:'即使贏了這場爭鬥，代價是否值得？有些勝利其實是敗北。'},
-  {id:55,suit:'swords',emoji:'⛵',num:'6',   name:'Six of Swords',   nameZh:'寶劍六',  keywords:['過渡','離開風暴','康復'],       meaning:'離開動盪的水域，平靜的彼岸已在前方，這是艱難但必要的旅程。'},
-  {id:56,suit:'swords',emoji:'🦹',num:'7',   name:'Seven of Swords', nameZh:'寶劍七',  keywords:['策略','逃避','不誠實'],         meaning:'有人在耍心機，可能是別人，也可能是你自己在欺騙自己。'},
-  {id:57,suit:'swords',emoji:'⛓️',num:'8',   name:'Eight of Swords', nameZh:'寶劍八',  keywords:['受困','自我限制','思維囚籠'],   meaning:'你以為的束縛大多來自自己的思維，解開眼罩你就能自由行走。'},
-  {id:58,suit:'swords',emoji:'😰',num:'9',   name:'Nine of Swords',  nameZh:'寶劍九',  keywords:['焦慮','噩夢','過度擔憂'],       meaning:'深夜的恐懼讓你輾轉難眠，但那些最壞的情境多半只存在於腦海。'},
-  {id:59,suit:'swords',emoji:'💀',num:'10',  name:'Ten of Swords',   nameZh:'寶劍十',  keywords:['終結','背叛','觸底反彈'],       meaning:'已經到了最低點，但最黑暗的時刻也意味著黎明即將到來。'},
-  {id:60,suit:'swords',emoji:'🧒',num:'Page',name:'Page of Swords',  nameZh:'寶劍侍從',keywords:['好奇','警覺','新想法'],         meaning:'思維敏銳，充滿好奇心，但說話前要三思，避免口無遮攔。'},
-  {id:61,suit:'swords',emoji:'🌪️',num:'Knt', name:'Knight of Swords',nameZh:'寶劍騎士',keywords:['急衝','直接','果斷'],           meaning:'行動力十足但過於衝動，在全速前進前記得先確認方向正確。'},
-  {id:62,suit:'swords',emoji:'👸',num:'Q',   name:'Queen of Swords', nameZh:'寶劍皇后',keywords:['獨立','犀利','直接'],           meaning:'思維清晰，直話直說，不被情緒左右，以理性和經驗做出判斷。'},
-  {id:63,suit:'swords',emoji:'🤴',num:'K',   name:'King of Swords',  nameZh:'寶劍國王',keywords:['權威','邏輯','公正'],           meaning:'以冷靜的頭腦和強大的邏輯分析一切，是理性決策的最高境界。'},
-
-  // ── 星幣 Pentacles（土元素：金錢、物質、工作、健康）──
-  {id:64,suit:'pents',emoji:'🌱',num:'Ace', name:'Ace of Pentacles', nameZh:'星幣王牌',keywords:['新機遇','物質開始','財富種子'], meaning:'一個嶄新的物質機會正在萌芽，好好栽培這顆種子。'},
-  {id:65,suit:'pents',emoji:'🤹',num:'2',   name:'Two of Pentacles', nameZh:'星幣二',  keywords:['平衡','多工','靈活應變'],       meaning:'同時兼顧多件事，需要在變動中保持靈活的平衡感。'},
-  {id:66,suit:'pents',emoji:'🎓',num:'3',   name:'Three of Pentacles',nameZh:'星幣三', keywords:['技藝','合作','學習'],           meaning:'精進技術、與他人合作，是這個階段最重要的兩件事。'},
-  {id:67,suit:'pents',emoji:'💰',num:'4',   name:'Four of Pentacles',nameZh:'星幣四',  keywords:['守財','安全感','控制'],         meaning:'過度抓緊財物或控制感，反而阻礙了更大的流動與豐盛。'},
-  {id:68,suit:'pents',emoji:'😿',num:'5',   name:'Five of Pentacles',nameZh:'星幣五',  keywords:['匱乏','困難','孤立'],           meaning:'物質或精神上的匱乏感襲來，記得抬頭看，幫助就在身旁。'},
-  {id:69,suit:'pents',emoji:'🤲',num:'6',   name:'Six of Pentacles', nameZh:'星幣六',  keywords:['給予','分享','慷慨'],           meaning:'財富的流動在於給予與接受，慷慨付出的同時也願意接受幫助。'},
-  {id:70,suit:'pents',emoji:'🌾',num:'7',   name:'Seven of Pentacles',nameZh:'星幣七', keywords:['等待收成','評估','耐心'],       meaning:'已努力播種，現在是等待成果的時期，評估方向是否需要調整。'},
-  {id:71,suit:'pents',emoji:'🔨',num:'8',   name:'Eight of Pentacles',nameZh:'星幣八', keywords:['勤奮','工藝','專注'],           meaning:'埋頭精進技術，重複的練習正在打磨你成為真正的專家。'},
-  {id:72,suit:'pents',emoji:'🏡',num:'9',   name:'Nine of Pentacles',nameZh:'星幣九',  keywords:['豐盛','獨立','自給自足'],       meaning:'靠自己的努力創造出豐足的生活，享受這份得來不易的自由。'},
-  {id:73,suit:'pents',emoji:'👨‍👩‍👧',num:'10', name:'Ten of Pentacles',nameZh:'星幣十',  keywords:['家族財富','傳承','長遠穩定'],   meaning:'長遠的財富積累與家族傳承，是物質層面最圓滿的狀態。'},
-  {id:74,suit:'pents',emoji:'🧒',num:'Page',name:'Page of Pentacles',nameZh:'星幣侍從',keywords:['學習','實踐','踏實起步'],       meaning:'以認真踏實的態度學習新技能，每一步都是未來財富的基石。'},
-  {id:75,suit:'pents',emoji:'🐎',num:'Knt', name:'Knight of Pentacles',nameZh:'星幣騎士',keywords:['可靠','勤勞','慢而穩'],       meaning:'不是最快的，但是最可靠的，穩健紮實的努力終將帶來成果。'},
-  {id:76,suit:'pents',emoji:'👸',num:'Q',   name:'Queen of Pentacles',nameZh:'星幣皇后',keywords:['務實','滋養','生活智慧'],      meaning:'以務實的智慧照顧好自己與周圍的人，將愛體現在日常的細節裡。'},
-  {id:77,suit:'pents',emoji:'🤴',num:'K',   name:'King of Pentacles',nameZh:'星幣國王',keywords:['財富掌控','成就','可靠'],       meaning:'以穩健的判斷力累積了巨大的物質成就，是可信賴的支柱。'},
+  {id:0,suit:'major',emoji:'🌟',num:'0',   name:'The Fool',          nameZh:'愚者',    keywords:['新生','冒險','無限可能'],  meaning:'靈魂踏上旅程的第一步，眼神仰望，毫不畏懼。'},
+  {id:1,suit:'major',emoji:'🔮',num:'I',   name:'The Magician',      nameZh:'魔術師',  keywords:['意志','創造','資源整合'],  meaning:'你擁有將夢想化為現實的力量，所有工具就在手邊。'},
+  {id:2,suit:'major',emoji:'🌙',num:'II',  name:'High Priestess',    nameZh:'女祭司',  keywords:['直覺','神秘','潛意識'],   meaning:'答案早已藏在靈魂最深處的靜默之中。'},
+  {id:3,suit:'major',emoji:'👑',num:'III', name:'The Empress',       nameZh:'女皇',    keywords:['豐饒','母性','創造力'],   meaning:'大地之母的能量湧現，滋養與豐收的季節到來。'},
+  {id:4,suit:'major',emoji:'⚡',num:'IV',  name:'The Emperor',       nameZh:'皇帝',    keywords:['權威','秩序','穩定'],     meaning:'建立結構，以理性與意志掌舵混亂。'},
+  {id:5,suit:'major',emoji:'🙏',num:'V',   name:'The Hierophant',    nameZh:'教皇',    keywords:['傳統','智慧','信仰'],     meaning:'在傳承的智慧中尋找你的真理。'},
+  {id:6,suit:'major',emoji:'💞',num:'VI',  name:'The Lovers',        nameZh:'戀人',    keywords:['選擇','連結','價值觀'],   meaning:'面臨的不只是感情抉擇，而是靈魂深處的選擇。'},
+  {id:7,suit:'major',emoji:'🏆',num:'VII', name:'The Chariot',       nameZh:'戰車',    keywords:['意志力','勝利','前進'],   meaning:'駕馭相反的力量，以意志衝破一切阻礙。'},
+  {id:8,suit:'major',emoji:'🦁',num:'VIII',name:'Strength',          nameZh:'力量',    keywords:['內在力量','勇氣','耐心'], meaning:'真正的力量來自溫柔的掌控，而非蠻力。'},
+  {id:9,suit:'major',emoji:'🕯️',num:'IX',  name:'The Hermit',        nameZh:'隱者',    keywords:['孤獨','內省','尋真'],     meaning:'在獨處的燈火中，找到照亮他人的智慧。'},
+  {id:10,suit:'major',emoji:'☯️',num:'X',  name:'Wheel of Fortune',  nameZh:'命運之輪',keywords:['命運','循環','轉機'],     meaning:'輪子永恆轉動，此刻的困境終將成為轉機。'},
+  {id:11,suit:'major',emoji:'⚖️',num:'XI', name:'Justice',           nameZh:'正義',    keywords:['公平','因果','真相'],     meaning:'宇宙自有其法則，誠實面對因果。'},
+  {id:12,suit:'major',emoji:'🌊',num:'XII',name:'The Hanged Man',    nameZh:'倒吊人',  keywords:['暫停','犧牲','新視角'],   meaning:'主動放手，才能看見顛倒世界的全新真相。'},
+  {id:13,suit:'major',emoji:'🦋',num:'XIII',name:'Death',            nameZh:'死神',    keywords:['轉化','結束','重生'],     meaning:'並非終結，而是蛻變——舊我謝幕，新生的序章。'},
+  {id:14,suit:'major',emoji:'🌈',num:'XIV',name:'Temperance',        nameZh:'節制',    keywords:['平衡','融合','耐心'],     meaning:'在流動中尋求平衡，急流與靜水之間自有道路。'},
+  {id:15,suit:'major',emoji:'🔗',num:'XV', name:'The Devil',         nameZh:'惡魔',    keywords:['束縛','執念','陰影'],     meaning:'你以為的枷鎖，其實從未真正鎖住你。'},
+  {id:16,suit:'major',emoji:'🌩️',num:'XVI',name:'The Tower',         nameZh:'塔',      keywords:['震撼','崩解','清醒'],     meaning:'虛假的高塔必然倒塌，廢墟才是重建的起點。'},
+  {id:17,suit:'major',emoji:'⭐',num:'XVII',name:'The Star',         nameZh:'星星',    keywords:['希望','療癒','信念'],     meaning:'黑夜最深處，那顆恆星從未熄滅。'},
+  {id:18,suit:'major',emoji:'🌕',num:'XVIII',name:'The Moon',        nameZh:'月亮',    keywords:['幻象','潛意識','迷惘'],   meaning:'月光之下，幻影與真實交織——信任你的直覺。'},
+  {id:19,suit:'major',emoji:'☀️',num:'XIX',name:'The Sun',           nameZh:'太陽',    keywords:['喜悅','成功','光明'],     meaning:'光明驅散一切陰影，喜悅如孩童般自在奔跑。'},
+  {id:20,suit:'major',emoji:'📯',num:'XX', name:'Judgement',         nameZh:'審判',    keywords:['覺醒','召喚','重生'],     meaning:'號角響起，你被召喚去成為更高版本的自己。'},
+  {id:21,suit:'major',emoji:'🌍',num:'XXI',name:'The World',         nameZh:'世界',    keywords:['完成','整合','圓滿'],     meaning:'一個循環圓滿完成，宇宙向你致意。'},
+  {id:22,suit:'wands',emoji:'🔥',num:'Ace',name:'Ace of Wands',      nameZh:'權杖王牌',keywords:['新開始','靈感爆發','行動衝動'],meaning:'一股強烈的創造衝動正在萌發，是啟動新計劃的最佳時機。'},
+  {id:23,suit:'wands',emoji:'🕯️',num:'2', name:'Two of Wands',       nameZh:'權杖二',  keywords:['規劃','遠見','待機而動'], meaning:'你已站在高處眺望遠方，現在是謀定而後動的時刻。'},
+  {id:24,suit:'wands',emoji:'🌄',num:'3', name:'Three of Wands',     nameZh:'權杖三',  keywords:['擴展','等待成果','前瞻'], meaning:'計劃已經啟動，船已出港，等待第一批成果回航。'},
+  {id:25,suit:'wands',emoji:'🎪',num:'4', name:'Four of Wands',      nameZh:'權杖四',  keywords:['慶祝','里程碑','穩定基礎'],meaning:'一個階段圓滿完成，值得停下來慶祝這份成就。'},
+  {id:26,suit:'wands',emoji:'⚔️',num:'5', name:'Five of Wands',      nameZh:'權杖五',  keywords:['競爭','衝突','多方角力'], meaning:'四面而來的競爭與意見分歧，需要在混亂中找到自己的立場。'},
+  {id:27,suit:'wands',emoji:'🏅',num:'6', name:'Six of Wands',       nameZh:'權杖六',  keywords:['勝利','公眾認可','自信'], meaning:'努力獲得了眾人的肯定，勝利凱旋的時刻到來。'},
+  {id:28,suit:'wands',emoji:'🛡️',num:'7', name:'Seven of Wands',     nameZh:'權杖七',  keywords:['防守','堅守立場','挑戰'], meaning:'站在高處捍衛自己的成果，不輕易讓步才能守住優勢。'},
+  {id:29,suit:'wands',emoji:'💨',num:'8', name:'Eight of Wands',     nameZh:'權杖八',  keywords:['快速進展','行動力','訊息'],meaning:'事情正在快速推進，保持靈活應變，抓住這股順風。'},
+  {id:30,suit:'wands',emoji:'😓',num:'9', name:'Nine of Wands',      nameZh:'權杖九',  keywords:['韌性','疲憊','最後關卡'], meaning:'你已走了很長的路，雖然疲憊，但終點就在眼前，再撐一下。'},
+  {id:31,suit:'wands',emoji:'😩',num:'10',name:'Ten of Wands',       nameZh:'權杖十',  keywords:['重擔','過度承擔','壓力'], meaning:'你承擔了太多，學會分工或放下一些責任是當務之急。'},
+  {id:32,suit:'wands',emoji:'🧒',num:'Page',name:'Page of Wands',    nameZh:'權杖侍從',keywords:['探索','熱忱','新想法'],   meaning:'帶著孩子般的熱情去探索新領域，不怕失敗的勇氣是你的武器。'},
+  {id:33,suit:'wands',emoji:'🏇',num:'Knt',name:'Knight of Wands',   nameZh:'權杖騎士',keywords:['衝動','冒險','全力以赴'], meaning:'充滿行動力但可能過於衝動，熱情是優點，但需要方向感。'},
+  {id:34,suit:'wands',emoji:'👸',num:'Q', name:'Queen of Wands',     nameZh:'權杖皇后',keywords:['自信','魅力','獨立'],     meaning:'充滿自信與魅力，以溫暖的領導力感染周圍的人。'},
+  {id:35,suit:'wands',emoji:'🤴',num:'K', name:'King of Wands',      nameZh:'權杖國王',keywords:['領導','遠見','創業精神'], meaning:'以成熟的眼光和強大的意志力帶領眾人，是天生的領導者。'},
+  {id:36,suit:'cups',emoji:'💧',num:'Ace',name:'Ace of Cups',        nameZh:'聖杯王牌',keywords:['新感情','情感流動','愛的開始'],meaning:'心扉敞開，新的愛與連結正在向你湧來。'},
+  {id:37,suit:'cups',emoji:'🤝',num:'2', name:'Two of Cups',         nameZh:'聖杯二',  keywords:['吸引','夥伴關係','共鳴'], meaning:'兩個靈魂相遇，彼此吸引，建立深刻的情感連結。'},
+  {id:38,suit:'cups',emoji:'🥂',num:'3', name:'Three of Cups',       nameZh:'聖杯三',  keywords:['慶祝','友誼','社群喜悅'], meaning:'與摯友共同慶祝，在愛與歡笑中感受生命的豐盛。'},
+  {id:39,suit:'cups',emoji:'😔',num:'4', name:'Four of Cups',        nameZh:'聖杯四',  keywords:['冷漠','無聊','錯過機會'], meaning:'沉浸在過去的不滿中，可能正在錯過眼前伸出的新機會。'},
+  {id:40,suit:'cups',emoji:'😢',num:'5', name:'Five of Cups',        nameZh:'聖杯五',  keywords:['失落','悲傷','遺憾'],     meaning:'為已失去的而悲傷是正常的，但別忘了身後仍有杯子未傾覆。'},
+  {id:41,suit:'cups',emoji:'🏡',num:'6', name:'Six of Cups',         nameZh:'聖杯六',  keywords:['懷舊','童年','純真'],     meaning:'過去的美好記憶帶來溫暖，但也要記得活在當下。'},
+  {id:42,suit:'cups',emoji:'🌫️',num:'7', name:'Seven of Cups',       nameZh:'聖杯七',  keywords:['幻想','選擇太多','迷失'], meaning:'面對太多誘人的可能性，容易在幻想中迷失，需要腳踏實地。'},
+  {id:43,suit:'cups',emoji:'🚶',num:'8', name:'Eight of Cups',       nameZh:'聖杯八',  keywords:['離開','尋求更多','轉身'], meaning:'即使眼前已有所成，內心仍渴望更有意義的事物，勇敢轉身。'},
+  {id:44,suit:'cups',emoji:'😊',num:'9', name:'Nine of Cups',        nameZh:'聖杯九',  keywords:['滿足','願望成真','享樂'], meaning:'願望之牌——你所渴望的正在實現，享受這份得來不易的滿足。'},
+  {id:45,suit:'cups',emoji:'👨‍👩‍👧‍👦',num:'10',name:'Ten of Cups',      nameZh:'聖杯十',  keywords:['家庭幸福','圓滿','長久'], meaning:'情感上最圓滿的狀態，家庭與愛情都達到了和諧的頂點。'},
+  {id:46,suit:'cups',emoji:'🧒',num:'Page',name:'Page of Cups',      nameZh:'聖杯侍從',keywords:['創意','浪漫','情感訊息'], meaning:'帶著夢想與好奇心接近情感，一個意想不到的好消息可能到來。'},
+  {id:47,suit:'cups',emoji:'🐟',num:'Knt',name:'Knight of Cups',     nameZh:'聖杯騎士',keywords:['浪漫','追求','理想主義'], meaning:'騎著白馬追求夢想的人，充滿詩意但需要落實行動。'},
+  {id:48,suit:'cups',emoji:'👸',num:'Q', name:'Queen of Cups',       nameZh:'聖杯皇后',keywords:['同理心','直覺','情感智慧'],meaning:'以深刻的同理心理解他人，直覺極為準確，是療癒者的原型。'},
+  {id:49,suit:'cups',emoji:'🤴',num:'K', name:'King of Cups',        nameZh:'聖杯國王',keywords:['情感成熟','平衡','智慧'],  meaning:'能夠在感性與理性之間保持平衡，以成熟的情感智慧引導他人。'},
+  {id:50,suit:'swords',emoji:'💡',num:'Ace',name:'Ace of Swords',    nameZh:'寶劍王牌',keywords:['真相','突破','清晰思維'], meaning:'一道清明的光劃破迷霧，真相浮現，做出清晰決斷的時刻。'},
+  {id:51,suit:'swords',emoji:'🤐',num:'2',name:'Two of Swords',      nameZh:'寶劍二',  keywords:['僵局','迴避','難以抉擇'], meaning:'蒙著眼睛拒絕看清真相，是時候摘下眼罩，直面那個困難的選擇。'},
+  {id:52,suit:'swords',emoji:'💔',num:'3',name:'Three of Swords',    nameZh:'寶劍三',  keywords:['心碎','悲傷','失望'],     meaning:'心被刺穿的痛苦是真實的，允許自己哀傷，然後讓療癒開始。'},
+  {id:53,suit:'swords',emoji:'😴',num:'4',name:'Four of Swords',     nameZh:'寶劍四',  keywords:['休養','冥想','暫時撤退'], meaning:'強迫性地休息並非軟弱，而是為下一場戰役積蓄力量。'},
+  {id:54,suit:'swords',emoji:'😈',num:'5',name:'Five of Swords',     nameZh:'寶劍五',  keywords:['衝突','失敗','不道德勝利'],meaning:'即使贏了這場爭鬥，代價是否值得？有些勝利其實是敗北。'},
+  {id:55,suit:'swords',emoji:'⛵',num:'6',name:'Six of Swords',      nameZh:'寶劍六',  keywords:['過渡','離開風暴','康復'], meaning:'離開動盪的水域，平靜的彼岸已在前方，這是艱難但必要的旅程。'},
+  {id:56,suit:'swords',emoji:'🦹',num:'7',name:'Seven of Swords',    nameZh:'寶劍七',  keywords:['策略','逃避','不誠實'],   meaning:'有人在耍心機，可能是別人，也可能是你自己在欺騙自己。'},
+  {id:57,suit:'swords',emoji:'⛓️',num:'8',name:'Eight of Swords',    nameZh:'寶劍八',  keywords:['受困','自我限制','思維囚籠'],meaning:'你以為的束縛大多來自自己的思維，解開眼罩你就能自由行走。'},
+  {id:58,suit:'swords',emoji:'😰',num:'9',name:'Nine of Swords',     nameZh:'寶劍九',  keywords:['焦慮','噩夢','過度擔憂'], meaning:'深夜的恐懼讓你輾轉難眠，但那些最壞的情境多半只存在於腦海。'},
+  {id:59,suit:'swords',emoji:'💀',num:'10',name:'Ten of Swords',     nameZh:'寶劍十',  keywords:['終結','背叛','觸底反彈'], meaning:'已經到了最低點，但最黑暗的時刻也意味著黎明即將到來。'},
+  {id:60,suit:'swords',emoji:'🧒',num:'Page',name:'Page of Swords',  nameZh:'寶劍侍從',keywords:['好奇','警覺','新想法'],   meaning:'思維敏銳，充滿好奇心，但說話前要三思，避免口無遮攔。'},
+  {id:61,suit:'swords',emoji:'🌪️',num:'Knt',name:'Knight of Swords', nameZh:'寶劍騎士',keywords:['急衝','直接','果斷'],     meaning:'行動力十足但過於衝動，在全速前進前記得先確認方向正確。'},
+  {id:62,suit:'swords',emoji:'👸',num:'Q',name:'Queen of Swords',    nameZh:'寶劍皇后',keywords:['獨立','犀利','直接'],     meaning:'思維清晰，直話直說，不被情緒左右，以理性和經驗做出判斷。'},
+  {id:63,suit:'swords',emoji:'🤴',num:'K',name:'King of Swords',     nameZh:'寶劍國王',keywords:['權威','邏輯','公正'],     meaning:'以冷靜的頭腦和強大的邏輯分析一切，是理性決策的最高境界。'},
+  {id:64,suit:'pents',emoji:'🌱',num:'Ace',name:'Ace of Pentacles',  nameZh:'星幣王牌',keywords:['新機遇','物質開始','財富種子'],meaning:'一個嶄新的物質機會正在萌芽，好好栽培這顆種子。'},
+  {id:65,suit:'pents',emoji:'🤹',num:'2', name:'Two of Pentacles',   nameZh:'星幣二',  keywords:['平衡','多工','靈活應變'], meaning:'同時兼顧多件事，需要在變動中保持靈活的平衡感。'},
+  {id:66,suit:'pents',emoji:'🎓',num:'3', name:'Three of Pentacles', nameZh:'星幣三',  keywords:['技藝','合作','學習'],     meaning:'精進技術、與他人合作，是這個階段最重要的兩件事。'},
+  {id:67,suit:'pents',emoji:'💰',num:'4', name:'Four of Pentacles',  nameZh:'星幣四',  keywords:['守財','安全感','控制'],   meaning:'過度抓緊財物或控制感，反而阻礙了更大的流動與豐盛。'},
+  {id:68,suit:'pents',emoji:'😿',num:'5', name:'Five of Pentacles',  nameZh:'星幣五',  keywords:['匱乏','困難','孤立'],     meaning:'物質或精神上的匱乏感襲來，記得抬頭看，幫助就在身旁。'},
+  {id:69,suit:'pents',emoji:'🤲',num:'6', name:'Six of Pentacles',   nameZh:'星幣六',  keywords:['給予','分享','慷慨'],     meaning:'財富的流動在於給予與接受，慷慨付出的同時也願意接受幫助。'},
+  {id:70,suit:'pents',emoji:'🌾',num:'7', name:'Seven of Pentacles', nameZh:'星幣七',  keywords:['等待收成','評估','耐心'], meaning:'已努力播種，現在是等待成果的時期，評估方向是否需要調整。'},
+  {id:71,suit:'pents',emoji:'🔨',num:'8', name:'Eight of Pentacles', nameZh:'星幣八',  keywords:['勤奮','工藝','專注'],     meaning:'埋頭精進技術，重複的練習正在打磨你成為真正的專家。'},
+  {id:72,suit:'pents',emoji:'🏡',num:'9', name:'Nine of Pentacles',  nameZh:'星幣九',  keywords:['豐盛','獨立','自給自足'], meaning:'靠自己的努力創造出豐足的生活，享受這份得來不易的自由。'},
+  {id:73,suit:'pents',emoji:'👨‍👩‍👧',num:'10',name:'Ten of Pentacles', nameZh:'星幣十',  keywords:['家族財富','傳承','長遠穩定'],meaning:'長遠的財富積累與家族傳承，是物質層面最圓滿的狀態。'},
+  {id:74,suit:'pents',emoji:'🧒',num:'Page',name:'Page of Pentacles',nameZh:'星幣侍從',keywords:['學習','實踐','踏實起步'], meaning:'以認真踏實的態度學習新技能，每一步都是未來財富的基石。'},
+  {id:75,suit:'pents',emoji:'🐎',num:'Knt',name:'Knight of Pentacles',nameZh:'星幣騎士',keywords:['可靠','勤勞','慢而穩'],  meaning:'不是最快的，但是最可靠的，穩健紮實的努力終將帶來成果。'},
+  {id:76,suit:'pents',emoji:'👸',num:'Q', name:'Queen of Pentacles', nameZh:'星幣皇后',keywords:['務實','滋養','生活智慧'], meaning:'以務實的智慧照顧好自己與周圍的人，將愛體現在日常的細節裡。'},
+  {id:77,suit:'pents',emoji:'🤴',num:'K', name:'King of Pentacles',  nameZh:'星幣國王',keywords:['財富掌控','成就','可靠'],  meaning:'以穩健的判斷力累積了巨大的物質成就，是可信賴的支柱。'},
 ];
 
 const POSITIONS = ['過去','現在','未來'];
-const POS_HINT = ['曾經發生的根源','正在面對的核心','即將展開的方向'];
+const POS_HINT  = ['曾經發生的根源','正在面對的核心','即將展開的方向'];
+const NEXT_LABEL = ['✦ 揭示現在之牌', '✦ 揭示未來之牌'];
 
 // ═══ STATE ═══
 let question='', selectedSlot=0, selectedCards=[null,null,null];
 let cards=[], currentX=0, targetX=0, focusedIndex=0, gammaRef=0, rafStarted=false;
+let rawGamma=0, rawBeta=0, holoGamma=0, holoBeta=0;
+let readingBuckets=null, revealedCount=0;
 const CARD_STEP = 120+16;
+const RING_CIRC = 2*Math.PI*70; // ≈ 439.8
 
 // ═══ STARS ═══
 (function(){
-  const c=document.getElementById('stars-canvas'), ctx=c.getContext('2d'); let stars=[],W,H;
-  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;}
+  const c=document.getElementById('stars-canvas'), ctx=c.getContext('2d');
+  let stars=[],W,H;
+  function resize(){W=c.width=innerWidth; H=c.height=innerHeight;}
   function init(){stars=[];for(let i=0;i<180;i++)stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.1+.2,a:Math.random(),phase:Math.random()*Math.PI*2,spd:Math.random()*.003+.001});}
-  let t=0;function draw(){ctx.clearRect(0,0,W,H);t+=.01;stars.forEach(s=>{const al=s.a*(.4+.6*Math.sin(t*s.spd*100+s.phase));ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(240,220,160,${al})`;ctx.fill();});requestAnimationFrame(draw);}
-  resize();init();draw();window.addEventListener('resize',()=>{resize();init();});
+  let t=0;
+  function draw(){
+    ctx.clearRect(0,0,W,H); t+=.01;
+    stars.forEach(s=>{
+      const al=s.a*(.4+.6*Math.sin(t*s.spd*100+s.phase));
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(240,220,160,${al})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize(); init(); draw();
+  window.addEventListener('resize',()=>{resize();init();});
 })();
 
 // ═══ SCREEN NAV ═══
-function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
 // ═══ S1: ENTRY ═══
 document.getElementById('enter-btn').addEventListener('click', async()=>{
@@ -443,12 +553,65 @@ document.getElementById('question-submit-btn').addEventListener('click',()=>{
   goTo('s-shuffle');
 });
 
-// ═══ S3: SHUFFLE ═══
-document.getElementById('shuffle-done-btn').addEventListener('click',()=>{
-  initCardSelection();
-  goTo('s-cards');
-  if(!rafStarted){rafStarted=true;renderLoop();}
-});
+// ═══ S3: LONG PRESS ═══
+const pressZone      = document.getElementById('press-zone');
+const pressRingFill  = document.getElementById('press-ring-fill');
+const pressOrb       = document.getElementById('press-orb');
+const pressLabel     = document.getElementById('press-label');
+const convergeOverlay= document.getElementById('converge-overlay');
+
+pressRingFill.style.strokeDasharray  = RING_CIRC;
+pressRingFill.style.strokeDashoffset = RING_CIRC;
+
+let pressStart=null, pressRAF=null;
+const PRESS_DURATION = 3000;
+const ORB_SEQ = ['🔮','🌀','🌟','✨','⚡'];
+
+function startPress(e){
+  e.preventDefault();
+  if(pressStart!==null) return;
+  pressStart = performance.now();
+  pressZone.classList.add('pressing');
+  convergeOverlay.style.opacity = '1';
+  pressRAF = requestAnimationFrame(tickPress);
+}
+function tickPress(){
+  if(pressStart===null) return;
+  const elapsed = performance.now()-pressStart;
+  const p = Math.min(elapsed/PRESS_DURATION, 1);
+  pressRingFill.style.strokeDashoffset = RING_CIRC*(1-p);
+  pressOrb.textContent = ORB_SEQ[Math.min(Math.floor(p*ORB_SEQ.length), ORB_SEQ.length-1)];
+  const secs = Math.ceil((PRESS_DURATION-elapsed)/1000);
+  pressLabel.textContent = p<1 ? `${secs} 秒後啟動…` : '✦ 能量注入完成 ✦';
+  if(p<1){ pressRAF=requestAnimationFrame(tickPress); }
+  else { completePress(); }
+}
+function cancelPress(){
+  if(pressStart===null) return;
+  pressStart=null; cancelAnimationFrame(pressRAF);
+  pressZone.classList.remove('pressing');
+  convergeOverlay.style.opacity='0';
+  pressRingFill.style.strokeDashoffset=RING_CIRC;
+  pressOrb.textContent='🔮';
+  pressLabel.textContent='長按三秒 · 注入能量';
+}
+function completePress(){
+  pressStart=null; cancelAnimationFrame(pressRAF);
+  pressZone.classList.remove('pressing');
+  setTimeout(()=>{ convergeOverlay.style.opacity='0'; }, 350);
+  setTimeout(()=>{
+    pressRingFill.style.strokeDashoffset=RING_CIRC;
+    pressOrb.textContent='🔮';
+    pressLabel.textContent='長按三秒 · 注入能量';
+    initCardSelection();
+    goTo('s-cards');
+    if(!rafStarted){ rafStarted=true; renderLoop(); }
+  }, 550);
+}
+pressZone.addEventListener('pointerdown', startPress);
+pressZone.addEventListener('pointerup',   cancelPress);
+pressZone.addEventListener('pointercancel',cancelPress);
+pressZone.addEventListener('pointerleave', cancelPress);
 
 // ═══ S4: CARD SELECTION ═══
 function initCardSelection(){
@@ -483,22 +646,27 @@ function buildCardStrip(){
   updateFocus(0,false);
 }
 
-function getCardEls(){return[...document.getElementById('card-strip').querySelectorAll('.tarot-card')];}
+function getCardEls(){ return [...document.getElementById('card-strip').querySelectorAll('.tarot-card')]; }
 
-function updateFocus(idx,animate=true){
+function updateFocus(idx, animate=true){
   const els=getCardEls();
   els.forEach((el,i)=>{
     el.classList.remove('is-focused');
-    const dist = Math.abs(i - idx);
-    const bri = dist===0 ? 1 : dist===1 ? 0.78 : 0.5;
-    el.style.transition=animate?'filter .3s':'none';
-    const slot=selectedCards.findIndex(sc=>sc&&sc.deckIndex===i);
-    const rotY=slot>=0?180:0;
-    el.style.transform=`rotateY(${rotY}deg)`;
-    el.style.filter=`brightness(${bri})`;
-    el.querySelector('.card-pos-label').textContent=slot>=0?POSITIONS[slot]:'';
+    const dist = Math.abs(i-idx);
+    const bri  = dist===0 ? 1 : dist===1 ? 0.78 : 0.5;
+    const slot = selectedCards.findIndex(sc=>sc&&sc.deckIndex===i);
+
+    // 3D arc: unfocused cards curve away and recede
+    const arcRotY  = slot>=0 ? 180 : (i-idx)*7;
+    const arcTZ    = -Math.abs(i-idx)*16;
+    const arcTY    = Math.abs(i-idx)*4;
+
+    el.style.transition = animate ? 'filter .3s, transform .3s' : 'none';
+    el.style.transform  = `rotateY(${arcRotY}deg) translateZ(${arcTZ}px) translateY(${arcTY}px)`;
+    el.style.filter     = `brightness(${bri})`;
+    el.querySelector('.card-pos-label').textContent = slot>=0 ? POSITIONS[slot] : '';
   });
-  if(els[idx])els[idx].classList.add('is-focused');
+  if(els[idx]) els[idx].classList.add('is-focused');
   focusedIndex=idx;
 }
 
@@ -507,18 +675,28 @@ function updateSlotIndicator(){
 }
 
 document.getElementById('select-card-btn').addEventListener('click',()=>{
-  if(selectedSlot>=3)return;
+  if(selectedSlot>=3) return;
   const cardData=cards[focusedIndex];
   if(selectedCards.some(sc=>sc&&sc.id===cardData.id)){showToast('這張牌已被選取');return;}
   selectedCards[selectedSlot]={...cardData,deckIndex:focusedIndex};
   const el=getCardEls()[focusedIndex];
-  el.classList.add('is-flipping'); el.classList.remove('idle-breathe');
+  el.classList.remove('idle-breathe');
+  el.style.transition='transform .75s cubic-bezier(.4,0,.2,1)';
   el.style.transform=`translateY(-6px) rotateY(180deg)`;
   el.querySelector('.card-pos-label').textContent=POSITIONS[selectedSlot];
-  setTimeout(()=>el.classList.remove('is-flipping'),750);
+
+  // Light streak
+  const streak=document.createElement('div');
+  streak.style.cssText='position:absolute;top:50%;left:50%;width:70px;height:2px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.95),transparent);transform:translate(-50%,-50%);border-radius:1px;pointer-events:none;z-index:99;';
+  el.appendChild(streak);
+  streak.animate(
+    [{opacity:0,transform:'translate(-50%,-50%) scaleX(0)'},{opacity:1,transform:'translate(-50%,-50%) scaleX(1)'},{opacity:0,transform:'translate(-50%,-50%) scaleX(3.5)'}],
+    {duration:520,easing:'ease-out'}
+  ).onfinish=()=>streak.remove();
+
   selectedSlot++;
   updateSlotIndicator();
-  if(selectedSlot>=3){showToast('三張牌已選定，正在解讀…');setTimeout(startReading,900);}
+  if(selectedSlot>=3){ showToast('三張牌已選定，正在解讀…'); setTimeout(startReading,900); }
   else showToast(`已選「${cardData.nameZh}」· 請繼續選第 ${selectedSlot+1} 張`);
 });
 
@@ -527,61 +705,235 @@ document.getElementById('calibrate-btn').addEventListener('click',()=>{
   window.addEventListener('deviceorientation',e=>{if(e.gamma!==null){gammaRef=e.gamma;showToast('已校準水平基準');}},{once:true});
 });
 
-// ═══ GYROSCOPE ═══
+// ═══ SENSORS ═══
 function handleOrientation(e){
-  if(e.gamma===null||!document.getElementById('s-cards').classList.contains('active'))return;
+  rawGamma = e.gamma||0;
+  rawBeta  = e.beta||0;
+  if(e.gamma===null || !document.getElementById('s-cards').classList.contains('active')) return;
   const g=Math.max(-40,Math.min(40,e.gamma-gammaRef));
   const maxOff=(cards.length-1)*CARD_STEP*.5;
   targetX=-(g/40)*maxOff;
 }
-let lastAcc={x:0,y:0,z:0},shakeThrottle=false;
+let lastAcc={x:0,y:0,z:0}, shakeThrottle=false;
 function handleMotion(e){
-  const acc=e.acceleration;if(!acc)return;
+  const acc=e.acceleration; if(!acc) return;
   const d=Math.abs(acc.x-lastAcc.x)+Math.abs(acc.y-lastAcc.y)+Math.abs(acc.z-lastAcc.z);
   lastAcc={x:acc.x||0,y:acc.y||0,z:acc.z||0};
   if(d>28&&!shakeThrottle&&document.getElementById('s-cards').classList.contains('active')){
-    shakeThrottle=true;document.getElementById('select-card-btn').click();
+    shakeThrottle=true; document.getElementById('select-card-btn').click();
     setTimeout(()=>shakeThrottle=false,1300);
   }
+}
+
+// Desktop mouse fallback for holo effect
+document.addEventListener('mousemove',e=>{
+  if(document.getElementById('s-reading').classList.contains('active')){
+    rawGamma=(e.clientX/window.innerWidth-.5)*28;
+    rawBeta =(e.clientY/window.innerHeight-.5)*18;
+  }
+});
+
+// ═══ HOLOGRAPHIC EFFECT (lerp + layers) ═══
+function updateHoloEffect(){
+  // Smooth lerp — slow coefficient = silky feel, no jitter
+  holoGamma += (rawGamma-holoGamma)*0.055;
+  holoBeta  += (rawBeta -holoBeta )*0.055;
+
+  const shimmerEls = document.querySelectorAll('.holo-shimmer');
+  if(!shimmerEls.length) return;
+
+  // Rainbow gradient angle + hue shift from tilt
+  const angle  = holoGamma*3.2+45;
+  const hueOff = holoGamma*9;
+  const grad = `repeating-linear-gradient(${angle}deg,
+    hsla(${  0+hueOff},100%,72%,0)    0%,
+    hsla(${  0+hueOff},100%,72%,.16) 10%,
+    hsla(${120+hueOff},100%,72%,.17) 25%,
+    hsla(${200+hueOff},100%,72%,.17) 40%,
+    hsla(${260+hueOff},100%,72%,.17) 55%,
+    hsla(${320+hueOff},100%,72%,.16) 70%,
+    hsla(${360+hueOff},100%,72%,0)  100%)`;
+  shimmerEls.forEach(el=>{ el.style.background=grad; });
+
+  // Foil highlight — moves with tilt (mix-blend-mode: screen)
+  const fx = 50+holoGamma*1.6;
+  const fy = 50+holoBeta*.9;
+  document.querySelectorAll('.holo-foil').forEach(el=>{
+    el.style.background=`radial-gradient(ellipse 55% 38% at ${fx}% ${fy}%, rgba(255,255,255,.13) 0%, rgba(255,255,255,.04) 45%, transparent 72%)`;
+  });
+
+  // Parallax: artwork moves opposite to tilt → depth illusion
+  document.querySelectorAll('.holo-art-layer').forEach(el=>{
+    el.style.transform=`translate(${holoGamma*-.75}px,${holoBeta*-.42}px)`;
+  });
+  // Background pattern counter-moves (slower, opposite direction)
+  document.querySelectorAll('.holo-bg-layer').forEach(el=>{
+    el.style.transform=`translate(${holoGamma*.38}px,${holoBeta*.22}px)`;
+  });
+
+  // Sparkle vein — appears at steeper tilt angles
+  const sparkleOp = Math.min(Math.abs(holoGamma)/28,.75);
+  const sparkleX  = 50+holoGamma*1.8;
+  document.querySelectorAll('.holo-sparkle').forEach(el=>{
+    el.style.opacity=sparkleOp;
+    el.style.background=`radial-gradient(ellipse 3px 90% at ${sparkleX}% 50%, rgba(255,248,200,.7) 0%, transparent 100%)`;
+  });
 }
 
 // ═══ RENDER LOOP ═══
 function renderLoop(){
   currentX+=(targetX-currentX)*.18;
-  const strip=document.getElementById('card-strip');
-  const glow=document.getElementById('glow-layer');
-  if(strip){
-    strip.style.transform=`translateX(${currentX}px)`;
-    glow.style.transform=`translateX(${currentX*1.4}px)`;
-    const nf=Math.round(-currentX/CARD_STEP+(cards.length-1)/2);
-    const cl=Math.max(0,Math.min(cards.length-1,nf));
-    if(cl!==focusedIndex)updateFocus(cl);
+  if(document.getElementById('s-cards').classList.contains('active')){
+    const strip=document.getElementById('card-strip');
+    const glow =document.getElementById('glow-layer');
+    if(strip&&cards.length){
+      strip.style.transform=`translateX(${currentX}px)`;
+      glow.style.transform =`translateX(${currentX*1.4}px)`;
+      const nf=Math.round(-currentX/CARD_STEP+(cards.length-1)/2);
+      const cl=Math.max(0,Math.min(cards.length-1,nf));
+      if(cl!==focusedIndex) updateFocus(cl);
+    }
   }
+  updateHoloEffect();
   requestAnimationFrame(renderLoop);
 }
 
 // ═══ S5: READING ═══
 function startReading(){
+  readingBuckets=null; revealedCount=0;
+  if(!rafStarted){ rafStarted=true; renderLoop(); }
   goTo('s-reading');
   document.getElementById('reading-q').textContent=`「${question}」`;
-  document.getElementById('spread-row').innerHTML=selectedCards.map((sc,i)=>`
-    <div class="spread-card-mini">
-      <div class="spread-pos">${POSITIONS[i]}</div>
-      <div class="spread-emoji">${sc.emoji}</div>
-      <div class="spread-name">${sc.name}</div>
-      <div class="spread-name-zh">${sc.nameZh}</div>
-    </div>`).join('');
-
-  document.getElementById('reading-content').innerHTML=`
-    <div class="reading-loading">
-      <div class="loading-orb">🔮</div>
-      <div class="loading-text">星象正在匯聚…</div>
-    </div>`;
-
-  if(GEMINI_KEY){ callGemini(); }
-  else { showApiKeyPrompt(); }
+  document.getElementById('restart-btn').style.display='none';
+  buildHoloSpread();
+  document.getElementById('reading-content').innerHTML=
+    '<div style="text-align:center;font-size:11px;color:rgba(201,168,76,.32);letter-spacing:.15em;padding:12px 0 4px;">點擊牌面以揭示命運</div>';
+  if(GEMINI_KEY){ callGemini(); } else { showApiKeyPrompt(); }
 }
 
+function buildHoloSpread(){
+  const spread=document.getElementById('holo-spread');
+  spread.innerHTML='';
+  selectedCards.forEach((sc,i)=>{
+    const col=document.createElement('div');
+    col.className='holo-col';
+    col.innerHTML=`
+      <div class="holo-card-wrap ${i===0?'':'locked'}" id="holo-card-${i}" data-slot="${i}">
+        <div class="holo-inner" id="holo-inner-${i}">
+          <div class="holo-back"><div class="holo-back-inner">✦</div></div>
+          <div class="holo-face">
+            <div class="holo-bg-layer"></div>
+            <div class="holo-face-border"></div>
+            <div class="holo-card-num">${sc.num}</div>
+            <div class="holo-art-layer"><div class="holo-art-glow"></div>${sc.emoji}</div>
+            <div class="holo-card-name">${sc.name}</div>
+            <div class="holo-card-zh">${sc.nameZh}</div>
+            <div class="holo-shimmer"></div>
+            <div class="holo-foil"></div>
+            <div class="holo-sparkle"></div>
+          </div>
+        </div>
+      </div>
+      <div class="holo-pos-label" id="holo-label-${i}">${POSITIONS[i]}</div>
+    `;
+    spread.appendChild(col);
+    if(i===0) addTapHint(col.querySelector('.holo-card-wrap'));
+    col.querySelector('.holo-card-wrap').addEventListener('click',()=>revealCard(i));
+  });
+}
+
+function addTapHint(wrap){
+  const h=document.createElement('div');
+  h.className='holo-tap-hint'; h.textContent='點擊揭示';
+  wrap.appendChild(h);
+}
+
+function revealCard(slotIndex){
+  if(slotIndex!==revealedCount) return;
+  const inner=document.getElementById(`holo-inner-${slotIndex}`);
+  if(inner.classList.contains('flipped')) return;
+  const wrap=document.getElementById(`holo-card-${slotIndex}`);
+  const label=document.getElementById(`holo-label-${slotIndex}`);
+  const hint=wrap.querySelector('.holo-tap-hint');
+  if(hint) hint.remove();
+  inner.classList.add('flipped');
+  label.classList.add('revealed');
+  revealedCount++;
+  showSlotReading(slotIndex);
+}
+
+function showSlotReading(slotIndex){
+  const content=document.getElementById('reading-content');
+  if(!readingBuckets){
+    content.innerHTML='<div class="reading-loading"><div class="loading-orb">🔮</div><div class="loading-text">星象解讀中…</div></div>';
+    const iv=setInterval(()=>{
+      if(readingBuckets){ clearInterval(iv); showSlotReading(slotIndex); }
+    },400);
+    return;
+  }
+  const sc=selectedCards[slotIndex];
+  const titles=['過去','現在','未來','行動建議'];
+  const hint=content.querySelector('div[style*="點擊牌面"]');
+  if(hint) hint.remove();
+  const loader=content.querySelector('.reading-loading');
+  if(loader) loader.remove();
+
+  const sec=document.createElement('div');
+  sec.className='reading-section';
+  sec.innerHTML=`
+    <div class="reading-divider"></div>
+    <div class="reading-section-title">${sc.emoji}　${titles[slotIndex]}　·　${sc.nameZh}</div>
+    <div class="reading-practical" id="rtext-${slotIndex}"></div>
+  `;
+  content.appendChild(sec);
+  setTimeout(()=>sec.scrollIntoView({behavior:'smooth',block:'start'}),220);
+
+  typewrite(document.getElementById(`rtext-${slotIndex}`), readingBuckets[slotIndex]||'', 14, ()=>{
+    if(slotIndex<2){ unlockNext(slotIndex+1); }
+    else { showActionSection(); }
+  });
+}
+
+function unlockNext(nextSlot){
+  const wrap=document.getElementById(`holo-card-${nextSlot}`);
+  if(!wrap) return;
+  wrap.classList.remove('locked');
+  addTapHint(wrap);
+  // Pulse to draw attention — single gentle flash, not repetitive
+  document.getElementById(`holo-inner-${nextSlot}`).animate(
+    [{boxShadow:'0 0 0 0 rgba(201,168,76,0)'},{boxShadow:'0 0 22px 5px rgba(201,168,76,.45)'},{boxShadow:'0 0 0 0 rgba(201,168,76,0)'}],
+    {duration:1400, iterations:1}
+  );
+  const content=document.getElementById('reading-content');
+  const btn=document.createElement('button');
+  btn.className='reveal-next-btn visible';
+  btn.textContent=NEXT_LABEL[nextSlot-1];
+  btn.onclick=()=>{ btn.remove(); revealCard(nextSlot); };
+  content.appendChild(btn);
+  setTimeout(()=>btn.scrollIntoView({behavior:'smooth',block:'nearest'}),300);
+}
+
+function showActionSection(){
+  if(!readingBuckets||!readingBuckets[3]) return;
+  const content=document.getElementById('reading-content');
+  content.querySelectorAll('.reveal-next-btn').forEach(b=>b.remove());
+  const sec=document.createElement('div');
+  sec.className='reading-section';
+  sec.innerHTML=`
+    <div class="reading-divider"></div>
+    <div class="reading-section-title">行動建議</div>
+    <div class="reading-practical" id="rtext-3"></div>
+  `;
+  content.appendChild(sec);
+  setTimeout(()=>sec.scrollIntoView({behavior:'smooth',block:'start'}),220);
+  typewrite(document.getElementById('rtext-3'), readingBuckets[3], 14, ()=>{
+    const btn=document.getElementById('restart-btn');
+    btn.style.display='block';
+    setTimeout(()=>btn.scrollIntoView({behavior:'smooth',block:'nearest'}),200);
+  });
+}
+
+// ═══ API PROMPT ═══
 function showApiKeyPrompt(){
   const content=document.getElementById('reading-content');
   content.innerHTML=`
@@ -597,14 +949,17 @@ function showApiKeyPrompt(){
     const k=document.getElementById('api-key-input').value.trim();
     if(!k){showToast('請輸入 API Key');return;}
     GEMINI_KEY=k;
-    content.innerHTML=`<div class="reading-loading"><div class="loading-orb">🔮</div><div class="loading-text">星象正在匯聚…</div></div>`;
+    content.innerHTML='<div style="text-align:center;font-size:11px;color:rgba(201,168,76,.32);letter-spacing:.15em;padding:12px 0 4px;">點擊牌面以揭示命運</div>';
     callGemini();
   });
-  document.getElementById('skip-ai').addEventListener('click',showFallback);
+  document.getElementById('skip-ai').addEventListener('click',()=>{
+    readingBuckets=buildFallback();
+    content.innerHTML='<div style="text-align:center;font-size:11px;color:rgba(201,168,76,.32);letter-spacing:.15em;padding:12px 0 4px;">點擊牌面以揭示命運</div>';
+  });
 }
 
+// ═══ GEMINI ═══
 async function callGemini(){
-  const content=document.getElementById('reading-content');
   const suitLabel={major:'大阿爾克那',wands:'權杖／火元素',cups:'聖杯／水元素',swords:'寶劍／風元素',pents:'星幣／土元素'};
   const cardDesc=selectedCards.map((sc,i)=>`${POSITIONS[i]}（${POS_HINT[i]}）：${sc.nameZh}（${sc.name}）［${suitLabel[sc.suit]}］— 關鍵字：${sc.keywords.join('、')}`).join('\n');
   const prompt=`你是一位具備 20 年經驗的資深塔羅諮詢師，風格理性感性並重，解讀具體有溫度，絕不說套話。
@@ -627,108 +982,60 @@ ${cardDesc}
 請依序輸出，每段前單獨一行寫對應標記：
 
 ##PAST##
-（過去解讀，最多80字，超過視為失敗）
+（過去解讀，最多80字）
 
 ##NOW##
-（現在解讀，最多80字，超過視為失敗）
+（現在解讀，最多80字）
 
 ##FUTURE##
-（未來解讀，最多80字，超過視為失敗）
+（未來解讀，最多80字）
 
 ##ACTION##
 （3條建議編號列出，每條20字內，最後一句心態提醒）`;
-
   try{
     const res=await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`,
       {method:'POST',headers:{'Content-Type':'application/json'},
        body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.85,maxOutputTokens:2000}})});
-
     if(!res.ok){
-      const errData=await res.json().catch(()=>({}));
-      const errMsg=errData?.error?.message||`HTTP ${res.status}`;
-      showApiError(errMsg);
-      return;
+      const err=await res.json().catch(()=>({}));
+      showToast((err?.error?.message||`API 錯誤 ${res.status}`).slice(0,42));
+      readingBuckets=buildFallback(); return;
     }
     const data=await res.json();
     const text=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
-    if(!text){ showApiError('API 回傳空內容'); return; }
-    renderReading(text);
-  }catch(e){
-    showApiError(e.message||'網路錯誤');
-  }
+    readingBuckets = text ? parseBuckets(text) : buildFallback();
+  }catch(e){ readingBuckets=buildFallback(); }
 }
 
-function renderReading(text){
-  const markers  = ['##PAST##','##NOW##','##FUTURE##','##ACTION##'];
-  const titles   = ['過去','現在','未來','行動建議'];
-
-  const buckets = markers.map((marker, i) => {
-    const start = text.indexOf(marker);
-    if(start === -1) return '';
-    const contentStart = start + marker.length;
-    const nextMarker = markers[i+1] ? text.indexOf(markers[i+1]) : -1;
-    const content = nextMarker > -1
-      ? text.slice(contentStart, nextMarker)
-      : text.slice(contentStart);
-    return content.trim();
+function parseBuckets(text){
+  const markers=['##PAST##','##NOW##','##FUTURE##','##ACTION##'];
+  return markers.map((m,i)=>{
+    const s=text.indexOf(m); if(s===-1) return '';
+    const cs=s+m.length;
+    const ns=markers[i+1]?text.indexOf(markers[i+1]):-1;
+    return (ns>-1?text.slice(cs,ns):text.slice(cs)).trim();
   });
-
-  // Fallback: paragraph split if no markers found
-  if(!buckets.some(b => b.length > 0)){
-    const paras = text.trim().split(/\n\n+/);
-    const third = Math.ceil(paras.length / 4);
-    buckets[0] = paras.slice(0, third).join('\n\n');
-    buckets[1] = paras.slice(third, third*2).join('\n\n');
-    buckets[2] = paras.slice(third*2, third*3).join('\n\n');
-    buckets[3] = paras.slice(third*3).join('\n\n');
-  }
-
-  // Card emojis for section headers
-  const cardEmojis = selectedCards.map(sc => sc?.emoji || '');
-
-  document.getElementById('reading-content').innerHTML = buckets.map((s,i) => `
-    <div class="reading-section">
-      <div class="reading-section-title">${cardEmojis[i] ? cardEmojis[i] + '　' : ''}${titles[i]}${selectedCards[i] ? '　·　' + selectedCards[i].nameZh : ''}</div>
-      <div class="reading-practical" id="section-${i}"></div>
-    </div>`).join('');
-
-  function writeSection(i){
-    if(i >= buckets.length) return;
-    const el = document.getElementById(`section-${i}`);
-    if(!el || !buckets[i]) return writeSection(i+1);
-    typewrite(el, buckets[i], 14, () => setTimeout(() => writeSection(i+1), 300));
-  }
-  writeSection(0);
+}
+function buildFallback(){
+  const [p,n,f]=selectedCards;
+  return [
+    `${p.nameZh}的印記刻在你的根源之中，那份${p.keywords[0]}的記憶塑造了今日的你。${p.meaning}`,
+    `${n.nameZh}此刻佇立眼前，呼喚你正視${n.keywords[1]}的課題。${n.meaning}`,
+    `展望未來，${f.nameZh}正悄然舒展，以${f.keywords[2]}為你鋪就前行的道路。${f.meaning}`,
+    `1. 每日靜心五分鐘，讓直覺引導你\n2. 對照牌義，寫下一件今日可行動的事\n3. 信任這次占卜帶給你的直覺感受\n\n記住：牌是鏡子，答案始終在你心中。`
+  ];
 }
 
+// ═══ TYPEWRITE ═══
 function typewrite(el,text,speed,onDone){
   el.innerHTML='<span class="typing-cursor"></span>';
-  let i=0;const cursor=el.querySelector('.typing-cursor');
+  let i=0; const cursor=el.querySelector('.typing-cursor');
   const iv=setInterval(()=>{
-    if(i>=text.length){clearInterval(iv);cursor.remove();if(onDone)onDone();return;}
+    if(i>=text.length){ clearInterval(iv); cursor.remove(); if(onDone) onDone(); return; }
     cursor.insertAdjacentText('beforebegin',text[i++]);
     document.getElementById('reading-scroll').scrollTop+=.8;
   },speed);
-}
-
-function showApiError(msg){
-  const content=document.getElementById('reading-content');
-  content.innerHTML=`
-    <div style="padding:24px;border:1px solid rgba(201,168,76,.2);border-radius:4px;margin-top:8px;">
-      <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:.2em;color:var(--gold-dim);margin-bottom:12px;">API 錯誤</div>
-      <div style="font-size:13px;color:rgba(240,208,128,.7);line-height:1.8;word-break:break-all;">${msg}</div>
-      <div style="display:flex;gap:12px;margin-top:20px;">
-        <button onclick="GEMINI_KEY='';showApiKeyPrompt();" style="flex:1;background:none;border:1px solid rgba(201,168,76,.3);color:rgba(201,168,76,.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;padding:10px;cursor:pointer;">重新輸入 Key</button>
-        <button onclick="showFallback();" style="flex:1;background:none;border:1px solid rgba(201,168,76,.2);color:rgba(201,168,76,.4);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;padding:10px;cursor:pointer;">略過・基礎解讀</button>
-      </div>
-    </div>`;
-}
-function showFallback(){
-  const [p,n,f]=selectedCards;
-  const poetic=`${p.nameZh}的印記刻在你的根源之中，那份${p.keywords[0]}的記憶塑造了今日的你。${n.nameZh}此刻佇立眼前，呼喚你正視${n.keywords[1]}的課題。而遠方，${f.nameZh}正悄然舒展，以${f.keywords[2]}為你鋪就前行的道路。`;
-  const practical=`過去的${p.nameZh}告訴你：${p.meaning}\n\n現在的${n.nameZh}提醒你：${n.meaning}\n\n展望未來，${f.nameZh}帶來訊息：${f.meaning}`;
-  renderReading(`${poetic}\n\n${practical}`);
 }
 
 // ═══ RESTART ═══
@@ -738,7 +1045,12 @@ document.getElementById('restart-btn').addEventListener('click',()=>{
 
 // ═══ TOAST ═══
 let toastTimer;
-function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200);}
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
 </script>
 </body>
 </html>
