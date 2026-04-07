@@ -48,7 +48,19 @@ body {
 /* Card-back holographic shimmer (S4) */
 .card-back-holo {
   position:absolute; inset:0; border-radius:8px;
-  mix-blend-mode:color-dodge; pointer-events:none; z-index:8; opacity:.55;
+  mix-blend-mode:color-dodge; pointer-events:none; z-index:8; opacity:.6;
+  background: repeating-linear-gradient(
+    105deg,
+    rgba(255,50,80,.22)  0%,
+    rgba(255,180,40,.22) 15%,
+    rgba(80,255,120,.22) 30%,
+    rgba(40,200,255,.22) 45%,
+    rgba(140,60,255,.22) 60%,
+    rgba(255,50,160,.22) 75%,
+    rgba(255,50,80,.22)  90%
+  );
+  background-size: 200% 100%;
+  background-position-x: 0%;
 }
 
 /* ═══ SCREENS ═══ */
@@ -253,11 +265,23 @@ textarea#question-input:focus { border-color:rgba(201,168,76,.6); }
 .holo-card-name { font-family:'Cinzel',serif; font-size:6.5px; letter-spacing:.14em; color:var(--gold); text-align:center; line-height:1.4; position:relative; z-index:2; }
 .holo-card-zh { font-size:6.5px; color:rgba(201,168,76,.5); margin-top:2px; position:relative; z-index:2; }
 
-/* Holographic shimmer layers — updated via JS */
+/* Holographic shimmer layers — position-x driven by JS */
 .holo-shimmer {
   position:absolute; inset:0; border-radius:8px;
   mix-blend-mode:color-dodge; pointer-events:none; z-index:5;
   opacity:.65;
+  background: repeating-linear-gradient(
+    105deg,
+    rgba(255,50,80,.2)  0%,
+    rgba(255,180,40,.2) 15%,
+    rgba(80,255,120,.2) 30%,
+    rgba(40,200,255,.2) 45%,
+    rgba(140,60,255,.2) 60%,
+    rgba(255,50,160,.2) 75%,
+    rgba(255,50,80,.2)  90%
+  );
+  background-size: 200% 100%;
+  background-position-x: 50%;
 }
 .holo-foil {
   position:absolute; inset:0; border-radius:8px;
@@ -516,7 +540,7 @@ const NEXT_LABEL = ['✦ 揭示現在之牌', '✦ 揭示未來之牌'];
 // ═══ STATE ═══
 let question='', selectedSlot=0, selectedCards=[null,null,null];
 let cards=[], currentX=0, focusedIndex=0, gammaRef=0, rafStarted=false;
-let cardVelocity=0, latestTiltAngle=0;           // velocity physics
+let cardVelocity=0, latestTiltAngle=0, smoothedTilt=0; // velocity physics
 let rawGamma=0, rawBeta=0, holoGamma=0, holoBeta=0, backHoloGamma=0;
 let readingBuckets=null, revealedCount=0;
 const CARD_STEP = 28;
@@ -761,67 +785,49 @@ document.addEventListener('mousemove',e=>{
   }
 });
 
-// ═══ HOLOGRAPHIC EFFECT (lerp + layers) ═══
+// ═══ HOLOGRAPHIC EFFECT (S5 face cards) ═══
 function updateHoloEffect(){
-  // Smooth lerp — slow coefficient = silky feel, no jitter
-  holoGamma += (rawGamma-holoGamma)*0.055;
-  holoBeta  += (rawBeta -holoBeta )*0.055;
+  holoGamma += (rawGamma - holoGamma) * 0.055;
+  holoBeta  += (rawBeta  - holoBeta)  * 0.055;
 
   const shimmerEls = document.querySelectorAll('.holo-shimmer');
   if(!shimmerEls.length) return;
 
-  // Rainbow gradient angle + hue shift from tilt
-  const angle  = holoGamma*3.2+45;
-  const hueOff = holoGamma*9;
-  const grad = `repeating-linear-gradient(${angle}deg,
-    hsla(${  0+hueOff},100%,72%,0)    0%,
-    hsla(${  0+hueOff},100%,72%,.16) 10%,
-    hsla(${120+hueOff},100%,72%,.17) 25%,
-    hsla(${200+hueOff},100%,72%,.17) 40%,
-    hsla(${260+hueOff},100%,72%,.17) 55%,
-    hsla(${320+hueOff},100%,72%,.16) 70%,
-    hsla(${360+hueOff},100%,72%,0)  100%)`;
-  shimmerEls.forEach(el=>{ el.style.background=grad; });
+  // ③ Shift background-position-x with tilt — light flows smoothly
+  const posX = 50 + holoGamma * 1.9;
+  shimmerEls.forEach(el=>{ el.style.backgroundPositionX = `${posX}%`; });
 
-  // Foil highlight — moves with tilt (mix-blend-mode: screen)
-  const fx = 50+holoGamma*1.6;
-  const fy = 50+holoBeta*.9;
+  // Foil highlight position
+  const fx = 50 + holoGamma * 1.6;
+  const fy = 50 + holoBeta  * 0.9;
   document.querySelectorAll('.holo-foil').forEach(el=>{
-    el.style.background=`radial-gradient(ellipse 55% 38% at ${fx}% ${fy}%, rgba(255,255,255,.13) 0%, rgba(255,255,255,.04) 45%, transparent 72%)`;
+    el.style.background = `radial-gradient(ellipse 55% 38% at ${fx}% ${fy}%, rgba(255,255,255,.13) 0%, rgba(255,255,255,.04) 45%, transparent 72%)`;
   });
 
-  // Parallax: artwork moves opposite to tilt → depth illusion
+  // Parallax: artwork vs background
   document.querySelectorAll('.holo-art-layer').forEach(el=>{
-    el.style.transform=`translate(${holoGamma*-.75}px,${holoBeta*-.42}px)`;
+    el.style.transform = `translate(${holoGamma*-.75}px,${holoBeta*-.42}px)`;
   });
-  // Background pattern counter-moves (slower, opposite direction)
   document.querySelectorAll('.holo-bg-layer').forEach(el=>{
-    el.style.transform=`translate(${holoGamma*.38}px,${holoBeta*.22}px)`;
+    el.style.transform = `translate(${holoGamma*.38}px,${holoBeta*.22}px)`;
   });
 
-  // Sparkle vein — appears at steeper tilt angles
-  const sparkleOp = Math.min(Math.abs(holoGamma)/28,.75);
-  const sparkleX  = 50+holoGamma*1.8;
+  // Sparkle vein at steeper angles
+  const sparkleOp = Math.min(Math.abs(holoGamma)/28, .75);
   document.querySelectorAll('.holo-sparkle').forEach(el=>{
-    el.style.opacity=sparkleOp;
-    el.style.background=`radial-gradient(ellipse 3px 90% at ${sparkleX}% 50%, rgba(255,248,200,.7) 0%, transparent 100%)`;
+    el.style.opacity = sparkleOp;
+    el.style.background = `radial-gradient(ellipse 3px 90% at ${50+holoGamma*1.8}% 50%, rgba(255,248,200,.7) 0%, transparent 100%)`;
   });
 }
 
 // ═══ S4 CARD-BACK HOLO ═══
 function updateS4BackHolo(){
   backHoloGamma += (rawGamma - backHoloGamma) * 0.06;
-  const angle  = backHoloGamma * 4.5 + 45;
-  const hue    = backHoloGamma * 11;
-  const grad   = `repeating-linear-gradient(${angle}deg,
-    hsla(${hue},100%,72%,0) 0%,
-    hsla(${40+hue},100%,72%,.22) 13%,
-    hsla(${120+hue},100%,72%,.22) 28%,
-    hsla(${200+hue},100%,72%,.20) 43%,
-    hsla(${270+hue},100%,72%,.22) 58%,
-    hsla(${330+hue},100%,72%,.18) 73%,
-    hsla(${360+hue},100%,72%,0) 100%)`;
-  document.querySelectorAll('.card-back-holo').forEach(el=>{ el.style.background=grad; });
+  // Shift background-position-x: 0%=left edge, 100%=right edge of 200%-wide gradient
+  const posX = 50 + backHoloGamma * 2.2; // ±45° → ±99% shift
+  document.querySelectorAll('.card-back-holo').forEach(el=>{
+    el.style.backgroundPositionX = `${posX}%`;
+  });
 }
 
 // ═══ RENDER LOOP — velocity physics ═══
@@ -829,11 +835,13 @@ function renderLoop(){
   const inCards = document.getElementById('s-cards').classList.contains('active');
 
   if(inCards && cards.length){
-    // Tilt angle drives velocity (acceleration model)
-    // Small deadzone ±2° to avoid drift when phone is flat
-    const tilt = Math.abs(latestTiltAngle)>2 ? latestTiltAngle : 0;
-    cardVelocity += tilt * 0.38;       // tilt → force
-    cardVelocity *= 0.86;              // friction / damping
+    // ① Lerp tilt input → absorbs hand tremor
+    smoothedTilt += (latestTiltAngle - smoothedTilt) * 0.10;
+    const tilt = Math.abs(smoothedTilt) > 2 ? smoothedTilt : 0; // ±2° deadzone
+
+    // Tilt → velocity (reduced sensitivity)
+    cardVelocity += tilt * 0.18;
+    cardVelocity *= 0.84;              // friction
 
     currentX += cardVelocity;
 
@@ -846,10 +854,11 @@ function renderLoop(){
     const centerFloat = -currentX / CARD_STEP + (cards.length - 1) / 2;
     const newFocus    = Math.max(0, Math.min(cards.length-1, Math.round(centerFloat)));
 
-    // Soft snap toward nearest card when nearly still
-    if(Math.abs(cardVelocity) < 0.9 && Math.abs(tilt) < 3){
+    // ② Magnetic snap: kick in earlier, pull harder
+    if(Math.abs(cardVelocity) < 1.5){
       const snapX = -(newFocus - (cards.length-1)/2) * CARD_STEP;
-      currentX   += (snapX - currentX) * 0.07;
+      currentX   += (snapX - currentX) * 0.14;
+      cardVelocity *= 0.75; // bleed off remaining velocity faster
     }
 
     const strip = document.getElementById('card-strip');
