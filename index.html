@@ -518,7 +518,7 @@ let cards=[], currentX=0, focusedIndex=0, gammaRef=0, rafStarted=false;
 let cardVelocity=0, latestTiltAngle=0;           // velocity physics
 let rawGamma=0, rawBeta=0, holoGamma=0, holoBeta=0, backHoloGamma=0;
 let readingBuckets=null, revealedCount=0;
-const CARD_STEP = 48;
+const CARD_STEP = 28;
 const RING_CIRC = 2*Math.PI*70; // ≈ 439.8
 
 // ═══ STARS ═══
@@ -865,14 +865,15 @@ function renderLoop(){
       const slot   = selectedCards.findIndex(sc => sc && sc.deckIndex === i);
       el.style.transition = 'filter .25s';      // only filter fades, transform is raw
       if(slot >= 0){
-        el.style.transform = `translateY(-8px) rotateY(180deg) translateZ(20px)`;
+        el.style.transform = `translateY(-14px) rotateY(180deg)`;
       } else {
-        // pop-out: focused card surges forward and up; others recede and arc down
-        const pop  = Math.max(0, 1 - dist * 1.6); // 1 at center, 0 beyond ~0.6
-        const tz   = pop * 40 - dist * 10;         // forward pop vs background recede
-        const ty   = -pop * 12 + dist * dist * 2.2;// up pop vs downward arc
-        const rotY = offset * 4;                    // gentler rotation (cards overlap)
-        el.style.transform = `rotateY(${rotY}deg) translateZ(${tz}px) translateY(${ty}px)`;
+        // Cards stay face-on (no rotateY) — like a stacked deck
+        // Focused card lifts up and comes forward; others stay flat
+        const pop = Math.max(0, 1 - dist * 1.8);
+        const ty  = -pop * 20;          // lift up
+        const tz  = pop * 30;           // come forward
+        const sc  = 1 + pop * 0.06;    // very slight scale
+        el.style.transform = `translateY(${ty}px) translateZ(${tz}px) scale(${sc})`;
       }
       el.style.filter  = `brightness(${bri})`;
       el.style.zIndex  = Math.round(100 - dist * 8);  // focused card always on top
